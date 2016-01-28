@@ -6,7 +6,7 @@
 (defn foo [request]
   {:status 200
    :headers {"Content-Type" "text/html"}
-   :body "hello World"})
+   :body "hello World zz "})
 
 (defroutes app-routes
   (GET "/" [] foo))

@@ -11,11 +11,13 @@
             [lein-ring "0.9.7"]]
   :ring {:handler webapp.core/app-routes
          :uberwar-name "cljat.war"}
-  :profiles{:dev
-            {:source-paths ["dev"]
-             :dependencies [[org.clojure/tools.namespace "0.2.11"]
-                            [org.clojure/java.classpath "0.2.3"]]}
-            :production
-            {:open-browser? false
-             :stacktracers? false
-             :auto-reload? false}})
+  :profiles {:dev {:source-paths ["dev"]
+                   :dependencies [[org.clojure/tools.namespace "0.2.11"]
+                                  [org.clojure/java.classpath "0.2.3"]]
+                   :ring {:nrepl {:start? true
+                                  :host "0.0.0.0"
+                                  :port 7888}}}
+            :test {}
+            :production {:open-browser? false
+                         :stacktracers? false
+                         :auto-reload? false}})

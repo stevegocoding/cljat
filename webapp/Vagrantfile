@@ -81,23 +81,30 @@ Vagrant.configure(2) do |config|
     c.ssh.insert_key = true
     
     # Sync folder from vagrant host to container
-    c.vm.synced_folder ".", "/tmp/app"
+    # c.vm.synced_folder ".", "/tmp/app", type: "rsync"
     
     c.vm.provider "docker" do |d|
       
       # Dockerfile build directory
-      # d.build_dir = "."
+      d.build_dir = "."
+      d.build_args = ["-t", "cltat-webapp-dev-img"]
+
+      # Args for docker run
+      d.create_args = ["-v=/tmp/app:/tmp/app"]
       
-      # Image name
-      d.name = "cljat-webap-dev"
+      # Container  name
+      d.name = "cljat-webapp-dev-container"
       
       # Port forwarding [docker-host-vm:container]
-      d.ports = ["55555:7888"]
+      d.ports = ["55555:7888", "8080:3000"]
 
       d.remains_running = true
 
+      # Mount
+      # d.volumes = ["/tmp/app/:/tmp/app/"]
+
       # custom docker-host vm
-      d.vagrant_vagrantfile = "./docker-host-vm/Vagrantfile"
+      d.vagrant_vagrantfile = "./Vagrantfile.proxy"
       
     end
   end

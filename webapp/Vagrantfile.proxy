@@ -1,18 +1,23 @@
 VAGRANTFILE_API_VERSION = "2"
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|  
-  config.vm.box = "williamyeh/ubuntu-trusty64-docker"
+  config.vm.box = "dduportal/boot2docker"
 
   # Assign a friendly name to this host VM
   config.vm.hostname = "docker-host"
 
-  # config.vm.synced_folder "..", "/tmp/app"
+  config.vm.synced_folder ".", "/tmp/app/", type: "rsync"
 
   config.vm.provider "virtualbox"
-  config.vm.provision "shell", inline:
-    "ps aux | grep 'sshd:' | awk '{print $2}' | xargs kill"
+  #config.vm.provision "shell", inline:
+  #  "ps aux | grep 'sshd:' | awk '{print $2}' | xargs kill"
 
+  
   # nRepl
   config.vm.network :forwarded_port, guest: 55555, host: 55555
+
+  # web
+  config.vm.network :forwarded_port, guest: 8080, host: 8080
+  
 
 end
