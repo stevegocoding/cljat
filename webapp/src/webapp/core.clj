@@ -1,7 +1,8 @@
 (ns webapp.core
   (:require
    [compojure.core :refer [defroutes GET POST]]
-   [compojure.route :as route]))
+   [compojure.route :as route]
+   [ring.util.response :as response]))
 
 (defn foo [request]
   {:status 200
@@ -9,4 +10,4 @@
    :body "hello World zz "})
 
 (defroutes app-routes
-  (GET "/" [] foo))
+  (GET "/" [] (response/resource-response "index.html" {:root "public"})))

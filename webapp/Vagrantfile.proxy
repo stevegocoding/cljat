@@ -16,6 +16,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # nRepl
   config.vm.network :forwarded_port, guest: 55555, host: 55555
 
+  # figwheel nRepl
+  config.vm.network :forwarded_port, guest: 55556, host: 55556
+
   # web
   config.vm.network :forwarded_port, guest: 8080, host: 8080
   

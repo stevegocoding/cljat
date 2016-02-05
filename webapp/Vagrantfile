@@ -96,7 +96,10 @@ Vagrant.configure(2) do |config|
       d.name = "cljat-webapp-dev-container"
       
       # Port forwarding [docker-host-vm:container]
-      d.ports = ["55555:7888", "8080:3000"]
+      d.ports = ["55555:7888", # clojure nRepl
+                 "55556:3449", # figwheel nRepl
+                 "8080:3000"   # ring web server
+                ]
 
       d.remains_running = true
 
