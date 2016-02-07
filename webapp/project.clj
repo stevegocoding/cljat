@@ -7,19 +7,20 @@
   :dependencies [[org.clojure/clojure "1.7.0"]
                  [org.clojure/core.async "0.2.374"]
                  [org.clojure/clojurescript "1.7.228"]
+                 [http-kit "2.1.18"]
                  [ring/ring-core "1.4.0"]
-                 [ring/ring-jetty-adapter "1.4.0"]
-                 [javax.servlet/servlet-api "2.5"]
                  [compojure "1.4.0"]
-                 [mount "0.1.9"]]
+                 [com.stuartsierra/component "0.3.1"]]
   
-  :plugins [[cider/cider-nrepl "0.11.0-SNAPSHOT"]
-            [refactor-nrepl "2.0.0-SNAPSHOT"]
+  :plugins [[lein-pprint "1.1.1"]
             [lein-ring "0.9.7"]
             [lein-cljsbuild "1.1.2"]
             [lein-figwheel "0.5.0-6"]]
 
   :source-paths ["src", "src-cljs"]
+
+  ;; Entry point
+  :main ^:skip-aot cljat.server.main
 
   :cljsbuild {:builds [{:id "dev"
                         :source-paths ["src-cljs"]
@@ -31,28 +32,37 @@
              :port 3449
              :css-dirs ["resources/public/css"]}
 
-  :ring {:handler webapp.core/app-routes
-         :uberwar-name "cljat.war"}
-  
-  :profiles {;; Development Profile
+  :profiles {
+             ;; Activated automatically in repl task
+             :repl {:plugins [[cider/cider-nrepl "0.11.0-SNAPSHOT"]
+                              [refactor-nrepl "2.0.0-SNAPSHOT"]]
+                    :repl-options {:host "0.0.0.0"
+                                   :port 7888}}
+
+             ;; Activated by uberjar task
+             :uberjar {:aot :all}
+             
+             ;; Activated by default
              :dev {:source-paths ["dev"]
-                   :dependencies [[org.clojure/tools.nrepl "0.2.11"]
+                   :dependencies [[org.clojure/tools.nrepl "0.2.12"]
                                   [org.clojure/tools.namespace "0.2.11"]
                                   [org.clojure/java.classpath "0.2.3"]
+                                  [ring/ring-devel "1.4.0"]
+                                  [javax.servlet/servlet-api "2.5"]
                                   [com.cemerick/piggieback "0.2.1"]
                                   [figwheel-sidecar "0.5.0-4"]]
-                   
-                   :repl-options {:host "0.0.0.0"
-                                  :nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
+
+                   :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
 
                    :ring {:nrepl {:start? true
                                   :host "0.0.0.0"
                                   :port 7888}}}
+             
              ;; Test Profile
              :test {}
 
              ;; Production Profile
-             :production {:open-browser? false
+             :prod {:open-browser? false
                           :stacktracers? false
-                          :auto-reload? false}}
+                    :auto-reload? false}}
   )
