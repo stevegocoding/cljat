@@ -1,8 +1,53 @@
 (ns user
-  (:require [clojure.tools.namespace.repl :as tn]
-            [ring.adapter.jetty :as rj]
-            [webapp.core :refer :all]))
+  (:require [com.stuartsierra.component :as component]
+            [clojure.tools.namespace.repl :refer [refresh refresh-all]]
+            [environ.core :refer [env]]
+            [server.components.log :as log]))
 
-(defn start-server
+(def sys nil)
+
+(defn sys-config
   []
-  (rj/run-jetty #'app-routes {:port 8080 :join? false}))
+  {:log {:logger-name (env :logger-name)}})
+
+(defn dev-system
+  [config]
+  (component/system-map
+   :log (log/log-comp (:log config))))
+
+(defn start-sys
+  [s]
+  (component/start-system s))
+
+(defn stop-sys
+  [s]
+  (component/stop-system s))
+
+(defn init
+  ;; Construct the current development system
+  []
+  (alter-var-root #'sys
+                  (constantly (dev-system (sys-config)))))
+
+(defn start
+  ;; Starts the current development system
+  []
+  (alter-var-root #'sys start-sys))
+
+(defn stop
+  ;; Shuts down and destroy the current development system
+  []
+  (alter-var-root #'sys
+                  (fn [s] (when s (stop-sys s)))))
+
+(defn go
+  ;; Initialize the current development system
+  []
+  (init)
+  (start))
+
+(defn reset
+  ;; Reset the current development system
+  []
+  (stop)
+  (refresh :after 'user/go))
