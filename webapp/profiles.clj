@@ -1,1 +1,1 @@
-{:dev {:env {:logger-name "cljat.main"}}}
+{:dev-env {:env {:logger-name "cljat.main"}}}

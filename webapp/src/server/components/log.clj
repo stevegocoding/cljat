@@ -7,7 +7,6 @@
   component/Lifecycle
   (start [comp]
     (println "Initializing logger ...")
-    (println "logger config: " logger-name)
     (let [^org.slf4j.Logger logger (LoggerFactory/getLogger logger-name)]
       ;; Return an updated version of the component with the run-time state assoc'd in
       (assoc comp :logger logger))
@@ -22,5 +21,5 @@
 
 (defn log-comp
   ;; Create new log component
-  [logger-name]
-  (map->Log {:logger-name logger-name}))
+  [log-config]
+  (map->Log log-config))

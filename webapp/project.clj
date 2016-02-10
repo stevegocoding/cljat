@@ -4,10 +4,12 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
 
+  :jvm-opts ["-Xmx1g"]
+  
   :dependencies [[org.clojure/clojure "1.7.0"]
                  [org.clojure/core.async "0.2.374"]
                  [org.clojure/clojurescript "1.7.228"]
-                 [org.clojure/tools.namespace "0.2.11"]
+                 ;; [org.clojure/tools.namespace "0.2.11"]
 
                  ;; logging
                  [org.clojure/tools.logging "0.3.1"]
@@ -37,7 +39,7 @@
   :source-paths ["src", "src-cljs"]
 
   ;; Entry point
-  :main ^:skip-aot server.main
+  ;; :main ^:skip-aot server.main
 
   :cljsbuild {:builds [{:id "dev"
                         :source-paths ["src-cljs"]
@@ -50,6 +52,7 @@
              :css-dirs ["resources/public/css"]}
 
   :profiles {
+             :default [:base :system :user :provided :dev :dev-env]
              ;; Activated by default
              :dev {:source-paths ["dev"]
                    :dependencies [[org.clojure/tools.nrepl "0.2.12"]
@@ -60,21 +63,20 @@
                                   [com.cemerick/piggieback "0.2.1"]
                                   [figwheel-sidecar "0.5.0-4"]]
 
-                   ;; :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
+                   :plugins [[cider/cider-nrepl "0.11.0-SNAPSHOT"]
+                             [refactor-nrepl "2.0.0-SNAPSHOT"]]
+
+                   :repl-options {:nrepl-middleware [cider.nrepl.middleware.pprint/wrap-pprint
+                                                     cider.nrepl.middleware.pprint/wrap-pprint-fn
+                                                     cemerick.piggieback/wrap-cljs-repl]
+                                  :host "0.0.0.0"}
 
                    :ring {:nrepl {:start? true
                                   :host "0.0.0.0"
                                   :port 7888}}}
-             ;; Activated automatically in repl task
-             :repl {:plugins [[cider/cider-nrepl "0.11.0-SNAPSHOT"]
-                              [refactor-nrepl "2.0.0-SNAPSHOT"]]
-                    :repl-options {:host "0.0.0.0"
-                                   :port 7888}}
 
              ;; Activated by uberjar task
              :uberjar {:aot :all}
-             
-            
              
              ;; Test Profile
              :test {}

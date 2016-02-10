@@ -13,7 +13,7 @@
 (defn dev-system
   [config]
   (component/system-map
-   :log (log/log-comp (:log config))))
+     :log (log/log-comp (:log config))))
 
 (defn start-sys
   [s]
