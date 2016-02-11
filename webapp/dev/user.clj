@@ -1,8 +1,8 @@
 (ns user
   (:require [com.stuartsierra.component :as component]
             [clojure.tools.namespace.repl :refer [refresh refresh-all]]
-            [environ.core :refer [env]]
-            [server.components.log :as log]))
+            [clojure.tools.logging :as log]
+            [environ.core :refer [env]]))
 
 (def sys nil)
 
@@ -10,10 +10,15 @@
   []
   {:log {:logger-name (env :logger-name)}})
 
-(defn dev-system
+#_(defn dev-system
   [config]
   (component/system-map
-     :log (log/log-comp (:log config))))
+   :log (log/log-comp (:log config))))
+
+(defn dev-system
+  [config]
+  (component/system-map {}))
+
 
 (defn start-sys
   [s]

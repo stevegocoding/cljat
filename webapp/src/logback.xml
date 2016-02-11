@@ -6,20 +6,30 @@
     </encoder>
   </appender>
 
+  <timestamp key="bySecond" datePattern="yyyyMMdd'T'HHmmss" />
   <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-    <file>server.log</file>
+    <file>log/log-${bySecond}.log</file>
     <append>true</append>
     <!-- encoders are assigned the type
          ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
     <encoder>
       <pattern>%-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
     </encoder>
+
+    <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+      <level>INFO</level>
+    </filter>
   </appender>
 
-  <logger name="cljat.main" level="DEBUG"/>
+  <logger name="server" level="DEBUG" >
+    <appender-ref ref="CONSOLE"/>
+  </logger>
+
+  <logger name="user" level="DEBUG" additivity="false">
+    <appender-ref ref="CONSOLE"/>
+  </logger>
 
   <root level="INFO">
-    <appender-ref ref="CONSOLE"/>
     <appender-ref ref="FILE"/>
   </root>
   
