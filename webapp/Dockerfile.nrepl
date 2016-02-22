@@ -15,5 +15,4 @@ EXPOSE 7888
 EXPOSE 3449
 
 # start ring embedded server
-# CMD lein with-profile dev ring server-headless
-CMD lein with-profile dev repl :headless
+CMD lein repl :headless :host 0.0.0.0 :port 7888

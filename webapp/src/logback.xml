@@ -1,3 +1,12 @@
+<!--
+    The current configuration:
+    - logger user: for ns 'user', there is only a CONSOLE
+    appender, since 'user' ns is for repl dev
+    - logger server: for ns 'server', there is a FILE appender
+    configured, and a threshold filter that only allow INFO level go
+    through.
+-->
+
 <configuration debug="false">
   
   <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">

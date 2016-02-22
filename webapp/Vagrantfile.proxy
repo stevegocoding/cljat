@@ -6,12 +6,14 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # Assign a friendly name to this host VM
   config.vm.hostname = "docker-host"
 
-  config.vm.synced_folder ".", "/tmp/app/", type: "rsync"
+  config.vm.synced_folder ".", "/tmp/app/", type: "rsync",
+      rsync__args: ["--verbose", "--archive", "--delete"]
 
   config.vm.provider "virtualbox"
   #config.vm.provision "shell", inline:
   #  "ps aux | grep 'sshd:' | awk '{print $2}' | xargs kill"
 
+  config.gatling.rsync_on_startup = false
   
   # nRepl
   config.vm.network :forwarded_port, guest: 55555, host: 55555

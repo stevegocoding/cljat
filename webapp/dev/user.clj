@@ -10,16 +10,6 @@
   []
   {:log {:logger-name (env :logger-name)}})
 
-#_(defn dev-system
-  [config]
-  (component/system-map
-   :log (log/log-comp (:log config))))
-
-(defn dev-system
-  [config]
-  (component/system-map {}))
-
-
 (defn start-sys
   [s]
   (component/start-system s))

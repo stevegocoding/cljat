@@ -18,8 +18,8 @@
                  ;; environ
                  [environ "1.0.2"]
 
-                 ;; Aleph async server
-                 [aleph "0.4.1-beta2"]
+                 ;; http-kit server
+                 [http-kit "2.1.21-alpha2"]
 
                  ;; redis client
                  [com.taoensso/carmine "2.12.2"]
