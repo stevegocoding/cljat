@@ -28,7 +28,10 @@
                  [compojure "1.4.0"]
 
                  ;; component framework
-                 [com.stuartsierra/component "0.3.1"]]
+                 [com.stuartsierra/component "0.3.1"]
+
+                 ;; schema
+                 [prismatic/schema "1.0.5"]]
   
   :plugins [[lein-pprint "1.1.1"]
             [lein-ring "0.9.7"]
@@ -51,38 +54,25 @@
              :port 3449
              :css-dirs ["resources/public/css"]}
 
+  ;; Activated by uberjar task
+  :uberjar {:aot :all}
+  
+  ;; Production Profile
+  :prod {:open-browser? false
+         :stacktracers? false
+         :auto-reload? false}
+
   :profiles {
              :default [:base :system :user :provided :dev :dev-env]
+
              ;; Activated by default
-             :dev {:source-paths ["dev"]
-                   :dependencies [[org.clojure/tools.nrepl "0.2.12"]
-                                  [org.clojure/tools.namespace "0.2.11"]
-                                  [org.clojure/java.classpath "0.2.3"]
+             :dev {
+                   :source-paths ["dev"]
+                   :dependencies [[org.clojure/java.classpath "0.2.3"]
                                   [ring/ring-devel "1.4.0"]
                                   [javax.servlet/servlet-api "2.5"]
                                   [com.cemerick/piggieback "0.2.1"]
                                   [figwheel-sidecar "0.5.0-4"]]
-
-                   :plugins [[cider/cider-nrepl "0.11.0-SNAPSHOT"]
-                             [refactor-nrepl "2.0.0-SNAPSHOT"]]
-
-                   :repl-options {:nrepl-middleware [cider.nrepl.middleware.pprint/wrap-pprint
-                                                     cider.nrepl.middleware.pprint/wrap-pprint-fn
-                                                     cemerick.piggieback/wrap-cljs-repl]
-                                  :host "0.0.0.0"}
-
-                   :ring {:nrepl {:start? true
-                                  :host "0.0.0.0"
-                                  :port 7888}}}
-
-             ;; Activated by uberjar task
-             :uberjar {:aot :all}
-             
-             ;; Test Profile
-             :test {}
-
-             ;; Production Profile
-             :prod {:open-browser? false
-                    :stacktracers? false
-                    :auto-reload? false}}
+                   }
+             }
   )

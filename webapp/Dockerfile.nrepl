@@ -1,7 +1,13 @@
 FROM clojure
 
-RUN mkdir -p /tmp/app
+# user-wide profiles
+COPY docker/user_profile/ /root/.lein/
+
+# project
+RUN mkdir -p /tmp/app 
 COPY project.clj /tmp/app
+
+# pull and cache the deps
 WORKDIR /tmp/app
 RUN lein deps
 
@@ -15,4 +21,4 @@ EXPOSE 7888
 EXPOSE 3449
 
 # start ring embedded server
-CMD lein repl :headless :host 0.0.0.0 :port 7888
+CMD lein trampoline repl :headless :host 0.0.0.0 :port 7888

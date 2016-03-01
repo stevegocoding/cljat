@@ -2,17 +2,24 @@
   (:require [com.stuartsierra.component :as component]
             [clojure.tools.namespace.repl :refer [refresh refresh-all]]
             [clojure.tools.logging :as log]
-            [environ.core :refer [env]]))
+            [environ.core :refer [env]]
+            (server.components
+             [http-kit :refer [new-web-server]])))
 
 (def sys nil)
 
 (defn sys-config
   []
-  {:log {:logger-name (env :logger-name)}})
+  {})
 
 (defn dev-system
-  [config]
-  (component/system-map {}))
+  [sys-config]
+  (component/system-map
+
+   :handler-comp 
+   :http-comp (component/using
+               (new-web-server (:http sys-config))
+               {:handler :handler-comp})))
 
 (defn start-sys
   [s]

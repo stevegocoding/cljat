@@ -1,11 +1,9 @@
 (ns server.system
-  (:require [com.stuartsierra.component :as component]
-            [server.components.log :as log]))
+  (:require [com.stuartsierra.component :as component]))
 
 (defn system
   [config]
-  (component/system-map
-   :log (log/log-comp (:log config))))
+  )
 
 (defn start-sys
   [s]
