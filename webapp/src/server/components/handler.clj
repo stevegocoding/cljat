@@ -2,19 +2,18 @@
   (:require [com.stuartsierra.component :as component]
             [compojure.core :as compojure]))
 
-(defrecord Handler [routes middleware]
+(defrecord Handler [new-app-routes-fns handler-fn]
   component/Lifecycle
 
-  (start [comp]
-    (let [routes (filter some (vals comp))
-          wrap-mw (get-in comp [:middleware :wrap-wm] identity)
-          handler (wrap-wm (apply compojure/routes routes))]
-      (assoc comp :handler handler)))
+  (start [component]
+    (let [app-handler (->> new-app-routes-fns
+                           (map #(% component))
+                           (apply compojure/routes))]
+      (assoc component :handler-fn app-handler)))
 
-  (stop [comp]
-    (assoc comp :handler nil)))
-
+  (stop [component]
+    (assoc component :handler-fn nil)))
 
 (defn new-handler
-  []
-  (->Handler))
+  [[:as fns]]
+  (map->Handler {:new-app-routes-fns fns}))

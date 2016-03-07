@@ -1,24 +1,10 @@
 FROM clojure
 
-# user-wide profiles
-COPY docker/user_profile/ /root/.lein/
+# Project directory
+VOLUME /webapp
+WORKDIR /webapp
 
-# project
-RUN mkdir -p /tmp/app 
-COPY project.clj /tmp/app
+# Ports publish (web server, nrepl server, figwheel repl server)
+EXPOSE 8080 7888 3449
 
-# pull and cache the deps
-WORKDIR /tmp/app
-RUN lein deps
-
-# ring web server
-EXPOSE 3000
-
-# nrepl 
-EXPOSE 7888
-
-# figwheel nrepl
-EXPOSE 3449
-
-# start ring embedded server
 CMD lein trampoline repl :headless :host 0.0.0.0 :port 7888

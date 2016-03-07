@@ -1,25 +1,48 @@
 (ns user
   (:require [com.stuartsierra.component :as component]
+            [ring.middleware.params :refer [wrap-params]]
+            [ring.middleware.keyword-params :refer [wrap-keyword-params]]
+            [ring.middleware.session :refer [wrap-session]]
+            [ring.middleware.cookies :refer [wrap-cookies]]
             [clojure.tools.namespace.repl :refer [refresh refresh-all]]
             [clojure.tools.logging :as log]
             [environ.core :refer [env]]
             (server.components
-             [http-kit :refer [new-web-server]])))
+             [jetty :refer [new-web-server]]
+             ;; [http-kit :refer [new-web-server]]
+             [handler :refer [new-handler]])
+            [server.app-routes :refer [new-app-routes]]))
+
+(defn middleware-fn
+  ([f] f)
+  ([f options]
+   #(apply f % options)))
+
+(defn compose-middleware
+  [middlewares]
+  (->> (reverse middlewares)
+       (map #(middleware-fn %))
+       (apply comp identity)))
+
+(def wrap-mw-fn (compose-middleware [[wrap-session]
+                                     [wrap-keyword-params]
+                                     [wrap-params]
+                                     [wrap-cookies]]))
 
 (def sys nil)
 
-(defn sys-config
-  []
-  {})
+(def sys-config
+  {:web {:host "0.0.0.0"
+         :port 8080
+         :join? false}})
 
 (defn dev-system
   [sys-config]
   (component/system-map
-
-   :handler-comp 
-   :http-comp (component/using
-               (new-web-server (:http sys-config))
-               {:handler :handler-comp})))
+   :handler (new-handler [new-app-routes])
+   :web (component/using
+         (new-web-server (:web sys-config))
+         {:handler :handler})))
 
 (defn start-sys
   [s]
@@ -33,7 +56,7 @@
   ;; Construct the current development system
   []
   (alter-var-root #'sys
-                  (constantly (dev-system (sys-config)))))
+                  (constantly (dev-system sys-config))))
 
 (defn start
   ;; Starts the current development system

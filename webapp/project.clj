@@ -4,7 +4,7 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
 
-  :jvm-opts ["-Xmx1g"]
+  :jvm-opts ["-Xmx2g" "-XX:MaxPermSize=1G"  "-server"]
   
   :dependencies [[org.clojure/clojure "1.7.0"]
                  [org.clojure/core.async "0.2.374"]
@@ -19,12 +19,16 @@
                  [environ "1.0.2"]
 
                  ;; http-kit server
-                 [http-kit "2.1.21-alpha2"]
+                 [http-kit "2.1.18"]
 
                  ;; redis client
                  [com.taoensso/carmine "2.12.2"]
-                 
-                 [ring/ring-core "1.4.0"]
+
+                 [ring/ring "1.4.0"]
+                 [ring/ring-json "0.4.0"]
+                 [ring/ring-headers "0.1.3"]
+                 [ring/ring-mock "0.3.0"]
+                 [ring/ring-defaults "0.1.5"]
                  [compojure "1.4.0"]
 
                  ;; component framework

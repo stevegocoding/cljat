@@ -2,20 +2,18 @@
   (:require [com.stuartsierra.component :as component]
             [org.httpkit.server :refer [run-server]]))
 
-
-(defrecord WebServer [options server handler]
+(defrecord WebServer [options handler server]
   component/Lifecycle
   
-  (start [comp]
+  (start [component]
     (let [server (run-server handler options)]
-      (assoc comp :server server)))
+      (assoc component :server server)))
 
-  (stop [comp]
-    (assoc comp :server nil)))
-
+  (stop [component]
+    (when server
+      (reset! server nil)
+      (assoc component :server nil))))
 
 (defn new-web-server
-  ([options]
-   (new-web-server 8080 options))
-  ([port options]
-   (map->WebServer {:options (merge {:port port} options)})))
+  [options]
+  (map->WebServer options))

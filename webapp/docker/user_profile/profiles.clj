@@ -12,6 +12,7 @@
 
   :injections [(require 'spyscope.core)
                (require '[vinyasa.inject :as inject])
+               (require 'io.aviso.repl)
                (inject/in ;; default injected namespace is '.'
                 [vinyasa.inject :refer [inject [in inject-in]]]
                 [vinyasa.lein :exclude [*project*]]
