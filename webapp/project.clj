@@ -9,7 +9,6 @@
   :dependencies [[org.clojure/clojure "1.7.0"]
                  [org.clojure/core.async "0.2.374"]
                  [org.clojure/clojurescript "1.7.228"]
-                 ;; [org.clojure/tools.namespace "0.2.11"]
 
                  ;; logging
                  [org.clojure/tools.logging "0.3.1"]
@@ -29,7 +28,10 @@
                  [ring/ring-headers "0.1.3"]
                  [ring/ring-mock "0.3.0"]
                  [ring/ring-defaults "0.1.5"]
+                 [ring-webjars "0.1.1"]
                  [compojure "1.4.0"]
+                 [clj-http "2.1.0"]
+                 [selmer "1.0.2"]
 
                  ;; component framework
                  [com.stuartsierra/component "0.3.1"]
@@ -43,40 +45,64 @@
             [lein-figwheel "0.5.0-6"]
             [lein-environ "1.0.2"]]
 
-  :source-paths ["src", "src-cljs"]
-
-  ;; Entry point
-  ;; :main ^:skip-aot server.main
-
+  ;; Clojurescript compiler configs
   :cljsbuild {:builds [{:id "dev"
                         :source-paths ["src-cljs"]
-                        :compiler {:output-to "resources/public/js/app.js"
+                        :figwheel {:websocket-host "localhost"
+                                   :on-jsload app/fig-reload
+                                   :on-message app/on-message}
+                        
+                        :compiler {:main "webapp.core"
+                                   :asset-path "js/out"
+                                   :output-to "resources/public/js/app.js"
+                                   :output-dir "resources/public/js/out"
                                    :optimizations :none
                                    :pretty-print true}}]}
 
   :figwheel {:http-server-root "public"
-             :port 3449
-             :css-dirs ["resources/public/css"]}
+             :server-ip "0.0.0.0"
+             :server-port 3449
+             
+             ;; CSS reloading
+             :css-dirs ["resources/public/css"]
 
-  ;; Activated by uberjar task
-  :uberjar {:aot :all}
-  
-  ;; Production Profile
-  :prod {:open-browser? false
-         :stacktracers? false
-         :auto-reload? false}
+             ;; nRepl
+             :nrepl-port 7889
 
-  :profiles {
-             :default [:base :system :user :provided :dev :dev-env]
-
-             ;; Activated by default
-             :dev {
-                   :source-paths ["dev"]
-                   :dependencies [[org.clojure/java.classpath "0.2.3"]
-                                  [ring/ring-devel "1.4.0"]
-                                  [javax.servlet/servlet-api "2.5"]
-                                  [com.cemerick/piggieback "0.2.1"]
-                                  [figwheel-sidecar "0.5.0-4"]]
-                   }
+             :server-logfile "log/figwheel_server.log" 
              }
+
+
+;;; File System Paths
+  :source-paths ["src", "src-cljs"]
+
+  ;; profile-isolated target paths
+  :target-path "target/%s/"
+
+;;; Entry Point
+  :main server.main
+  :nrepl-options {:init-ns user}
+  
+  :profiles {
+             :dev [:project-dev :local-dev]
+             :test {:env {:cljat-env "test"}}
+             :prod {:env {:cljat-env "production"}}
+             :project-dev {:source-paths ["dev"]
+                           :dependencies [[org.clojure/java.classpath "0.2.3"]
+                                          [ring/ring-devel "1.4.0"]
+                                          [javax.servlet/servlet-api "2.5"]
+                                          [com.cemerick/piggieback "0.2.1"]
+                                          [figwheel-sidecar "0.5.0-4"]]
+
+                           :nrepl-middleware ["cemerick.piggieback/wrap-cljs-repl"]
+                           
+                           :host "0.0.0.0"
+                           :env {:cljat-env "development"}}
+             
+             ;; be overriden by the values from  profiles.clj
+             :local-dev {}
+
+             ;; uberjar task profile
+             ;; The :default profile will be removed when generating uberjar
+             :uberjar {:aot :all}}
   )

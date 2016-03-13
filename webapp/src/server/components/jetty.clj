@@ -1,20 +1,48 @@
 (ns server.components.jetty
+  (:import org.eclipse.jetty.server.Server)
   (:require [com.stuartsierra.component :as component]
-            [ring.adapter.jetty :refer [run-jetty]]))
+            [schema.core :as s]
+            [schema.coerce :as coerce]
+            [schema.utils :as s-utils]
+            [ring.adapter.jetty :refer [run-jetty]]
+            [server.schema :refer :all]))
 
-(defrecord WebServer [options server handler]
+(def WebOptions
+  {:host HostName
+   :port Port
+   :join? s/Bool})
+
+(defn WebOptionsEnv->WebOptions
+  [{:keys [host port join?] :as options-env}]
+  {:host host
+   :port port
+   :join? join?})
+
+(def parse-web-server-options
+  (coerce/coercer WebOptions {WebOptions WebOptionsEnv->WebOptions
+                              Port #(Integer/parseInt %)}))
+
+
+(defrecord WebServer [options]
   component/Lifecycle
 
   (start [component]
-    (let [handler (get-in component [:handler :handler-fn] handler)
-          server (run-jetty handler options)]
-      (assoc component :server server)))
+    (if (:server component)
+      component
+      (let [
+            handler (atom (delay (get-in component [:handler :handler-fn])))
+            server (run-jetty (fn [req] (@@handler req)) options)]
+        (assoc component :server server))))
   
   (stop [component]
-    (when server
-      (.stop server)
-      (assoc component :server nil))))
+    (when-let [^Server server (:server component)]
+      (do (.stop server)
+          (.join server)
+          (assoc component :server nil)))))
 
 (defn new-web-server
   [options]
-  (map->WebServer {:options options}))
+  (let [coercer parse-web-server-options]
+    (-> (try (s/validate WebOptions options)
+             (catch Exception e (parse-web-server-options options))) 
+        (->WebServer))))
