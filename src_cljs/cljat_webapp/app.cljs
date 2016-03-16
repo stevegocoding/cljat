@@ -1,6 +1,8 @@
-(ns webapp.core)
+(ns cljat-webapp.app)
 
-(println "hello world - cljat")
+(enable-console-print!)
+
+(.log js/console "Heymlkajflkjsdfkjflksjadfmmmlaskjflkjf sup?!")
 
 (defn on-message [msg-hist]
   (prn (first msg-hist)))

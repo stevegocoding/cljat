@@ -4,7 +4,23 @@
     <meta charset="UTF-8"/>
     <title>{{ home-title }}</title>
   </head>
+  
   <body>
-      {{ }}
+
+      <div class="container">
+          <div id="app"></div>
+      </div>
+
+      <!-- Scripts and Styles  -->
+      {% style "/css/home.css"  %}
+
+      {% if dev  %}
+          
+          {% script "/js/app.js" %}
+          
+      {% else %}
+          {% script "/js/app.js" %}
+      {% endif %}
+      
   </body>
 </html>

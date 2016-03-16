@@ -15,7 +15,8 @@
              [middleware :refer [new-middleware]]
              [endpoint :refer [new-endpoint]])
             [server.app-routes :refer [new-app-routes]]
-            [clj-http.client :as http]))
+            [clj-http.client :as http]
+            [figwheel-sidecar.repl-api :refer :all]))
 
 (def sys nil)
 

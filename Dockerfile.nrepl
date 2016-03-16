@@ -5,6 +5,6 @@ VOLUME /webapp
 WORKDIR /webapp
 
 # Ports publish (web server, nrepl server, figwheel server, figwheel nrepl server)
-EXPOSE 8080 7888 3449 7889
+EXPOSE 8080 7888 8081 7889
 
 CMD lein trampoline repl :headless :host 0.0.0.0 :port 7888

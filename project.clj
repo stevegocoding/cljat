@@ -14,6 +14,12 @@
                  [org.clojure/tools.logging "0.3.1"]
                  [ch.qos.logback/logback-classic "1.1.3"]
 
+                 ;; component framework
+                 [com.stuartsierra/component "0.3.1"]
+
+                 ;; schema
+                 [prismatic/schema "1.0.5"]
+
                  ;; environ
                  [environ "1.0.2"]
 
@@ -33,11 +39,8 @@
                  [clj-http "2.1.0"]
                  [selmer "1.0.2"]
 
-                 ;; component framework
-                 [com.stuartsierra/component "0.3.1"]
-
-                 ;; schema
-                 [prismatic/schema "1.0.5"]]
+                 ;; Front-end stuff
+                 [reagent "0.6.0-alpha"]]
   
   :plugins [[lein-pprint "1.1.1"]
             [lein-ring "0.9.7"]
@@ -47,12 +50,13 @@
 
   ;; Clojurescript compiler configs
   :cljsbuild {:builds [{:id "dev"
-                        :source-paths ["src-cljs"]
+                        :source-paths ["src_cljs"]
                         :figwheel {:websocket-host "localhost"
-                                   :on-jsload app/fig-reload
-                                   :on-message app/on-message}
+                                   :on-jsload cljat-webapp.app/fig-reload
+                                   :on-message cljat-webapp.app/on-message}
                         
-                        :compiler {:main "webapp.core"
+                        :compiler {
+                                   :main "cljat-webapp.app"
                                    :asset-path "js/out"
                                    :output-to "resources/public/js/app.js"
                                    :output-dir "resources/public/js/out"
@@ -61,20 +65,22 @@
 
   :figwheel {:http-server-root "public"
              :server-ip "0.0.0.0"
-             :server-port 3449
+             :server-port 8081
              
              ;; CSS reloading
              :css-dirs ["resources/public/css"]
 
              ;; nRepl
              :nrepl-port 7889
+             :nrepl false
+             ;; :hawk-options {:watcher :polling}
 
              :server-logfile "log/figwheel_server.log" 
              }
 
 
 ;;; File System Paths
-  :source-paths ["src", "src-cljs"]
+  :source-paths ["src", "src_cljs"]
 
   ;; profile-isolated target paths
   :target-path "target/%s/"
