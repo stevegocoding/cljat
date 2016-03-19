@@ -19,30 +19,41 @@
                         :msg-str "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur bibendum ornare dolor, quis ullamcorper ligula sodales."
                         }
 
-                       {:msg-id "msg-0000"
+                       {:msg-id "msg-0001"
                         :sent-from "user-0"
                         :sent-time "xx-xx-xxxx"
-                        :msg-str "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur bibendum ornare dolor, quis ullamcorper ligula sodales."
+                        :msg-str "hahahahah"
                         }
 
-                       {:msg-id "msg-0000"
+                       {:msg-id "msg-0002"
                         :sent-from "Mike"
                         :sent-time "xx-xx-xxxx"
                         :msg-str "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur bibendum ornare dolor, quis ullamcorper ligula sodales."
                         }
 
-                       {:msg-id "msg-0000"
+                       {:msg-id "msg-0003"
                         :sent-from "user-0"
                         :sent-time "xx-xx-xxxx"
                         :msg-str "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur bibendum ornare dolor, quis ullamcorper ligula sodales."
                         }
 
-                       {:msg-id "msg-0000"
+                       {:msg-id "msg-0004"
                         :sent-from "Mike"
                         :sent-time "xx-xx-xxxx"
-                        :msg-str "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur bibendum ornare dolor, quis ullamcorper ligula sodales."
+                        :msg-str "hehehehheehhehehe"
+                        }
+                       
+                       {:msg-id "msg-0005"
+                        :sent-from "Mike"
+                        :sent-time "xx-xx-xxxx"
+                        :msg-str "hehehehheehhehehe"
+                        }
+
+                       {:msg-id "msg-0006"
+                        :sent-from "Mike"
+                        :sent-time "xx-xx-xxxx"
+                        :msg-str "hehehehheehhehehe"
                         }]
-
                       ))
 
 (def client-info (r/atom {:user-name "user-0"}))
@@ -68,7 +79,7 @@
   (fn []
     [:ul {:class "chat-thread-list"}
      (for [msg @messages]
-       [msg-item msg])]))
+       ^{:key msg} [msg-item msg])]))
 
 (defn chat-box-panel-header []
   (fn []
@@ -98,20 +109,49 @@
       [:span {:class "input-group-btn"}
        [button {:id "btn-send" :bsStyle "warning" :bsSize "sm"} "Send"]]]]))
 
+(defn sidebar-container []
+  (fn []
+    [:div {:id "sidebar-container" :class "cp-container"}
+     [:div {:class "sidebar-panel tabbable tabs-below"}
+      [:div {:class "tab-content"}
+       [:div {:class "tab-pane active"}
+        "sidebar pane 1"]
+       [:div {:class "tab-pane"}
+        "sidebar pane 2"]]
+      [:ul {:class "sidebar-tabs nav nav-justified"}
+       [:li {:id "contacts-tab" :class "sidebar-tab highlighted"}
+        [:a "tab-one"]]
+       [:li {:id "chat-tab" :class "sidebar-tab"}
+        [:a "tab-two"]]]]]))
+
 (defn chat-container []
   (fn []
-    [row {:id "chat-container"}
-     [col {:md 5}
-      [:div {:class "panel panel-primary"}
-       [chat-box-panel-header]
-       [chat-box-panel-body]
-       [chat-box-panel-footer]]]]))
+    [:div {:id "chat-container" :class "cp-container"}
+     [:div {:class "chat-panel panel panel-primary"}
+      ;; [chat-box-panel-header]
+      [chat-box-panel-body]
+      [chat-box-panel-footer]]]))
+
+(defn header-container []
+  (fn []
+    [:div {:id "header-container"}
+     [:nav {:class "navbar navbar-default"}]]))
 
 (defn app []
-  (let [messages (r/atom {})]
-    (fn []
-      [:div#app-wrap.container
-       [chat-container messages]])))
+  (fn []
+    [:div {:id "app-wrap" :class "wrap"} 
+     [:div {:id "header-wrap" :class "wrap"}
+      [row {:id "header-row"}
+       [col {:md 12}
+        [header-container]]
+       ]]
+     [:div {:id "main-wrap" :class "wrap"}
+      [row {:id "main-row"}
+       [col {:class "col" :md 4}
+        [sidebar-container]]
+       [col {:class "col" :md 8}
+        [chat-container]]
+       ]]]))
 
 (defn mount-root []
   (r/render-component
