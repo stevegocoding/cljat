@@ -40,6 +40,9 @@
                  [selmer "1.0.2"]
 
                  ;; Front-end stuff
+                 [org.webjars/bootstrap "3.3.6"]
+                 [org.webjars/font-awesome "4.5.0"]
+                 [cljsjs/react-bootstrap "0.28.1-1" :exclusions [org.webjars.bower/jquery]]
                  [reagent "0.6.0-alpha"]]
   
   :plugins [[lein-pprint "1.1.1"]
@@ -52,9 +55,7 @@
   :cljsbuild {:builds [{:id "dev"
                         :source-paths ["src_cljs"]
                         :figwheel {:websocket-host "localhost"
-                                   :on-jsload cljat-webapp.app/fig-reload
-                                   :on-message cljat-webapp.app/on-message}
-                        
+                                   :on-jsload cljat-webapp.app/fig-reload}
                         :compiler {
                                    :main "cljat-webapp.app"
                                    :asset-path "js/out"
@@ -73,7 +74,7 @@
              ;; nRepl
              :nrepl-port 7889
              :nrepl false
-             ;; :hawk-options {:watcher :polling}
+             :hawk-options {:watcher :polling}
 
              :server-logfile "log/figwheel_server.log" 
              }

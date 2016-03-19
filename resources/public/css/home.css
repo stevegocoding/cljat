@@ -1,0 +1,66 @@
+#app-wrap #chat-container {
+    width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.chat-thread-container {
+    overflow-y: scroll;
+    height: 500px;
+}
+
+.chat-thread-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.chat-thread-list li {
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px dotted #B3A9A9;
+}
+
+.msg-body {
+    background: white;
+    padding: 10px;
+    border-radius: 2px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    max-width:100%;
+}
+
+.chat-thread-list li.left .msg-body {
+    //margin-left: 60px;
+}
+
+.chat-thread-list li.right .msg-body {
+    //margin-right: 60px;
+    background: #e3e3e3;
+    padding-bottom: 20px;
+}
+
+.chat-thread-list li .msg-body p {
+    margin: 0;
+    color: #777777;
+}
+
+/**
+Scroll Bar
+*/
+::-webkit-scrollbar-track
+{
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+    background-color: #F5F5F5;
+}
+
+::-webkit-scrollbar
+{
+    width: 12px;
+    background-color: #F5F5F5;
+}
+
+::-webkit-scrollbar-thumb
+{
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+    background-color: #555;
+}
