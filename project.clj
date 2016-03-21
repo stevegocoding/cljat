@@ -42,7 +42,9 @@
                  ;; Front-end stuff
                  [org.webjars/bootstrap "3.3.6"]
                  [org.webjars/font-awesome "4.5.0"]
+                 [cljsjs/bootstrap "3.3.6-0"]
                  [cljsjs/react-bootstrap "0.28.1-1" :exclusions [org.webjars.bower/jquery]]
+                 [jayq "2.5.4"]
                  [reagent "0.6.0-alpha"]]
   
   :plugins [[lein-pprint "1.1.1"]

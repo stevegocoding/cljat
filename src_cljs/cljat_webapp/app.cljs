@@ -11,7 +11,6 @@
 (def button (r/adapt-react-class (aget js/ReactBootstrap "Button")))
 (def row (r/adapt-react-class (aget js/ReactBootstrap "Row")))
 (def col (r/adapt-react-class (aget js/ReactBootstrap "Col")))
-(def panel (r/adapt-react-class (aget js/ReactBootstrap "Panel")))
 
 (def messages (r/atom [{:msg-id "msg-0000"
                         :sent-from "Jack Sparrow"
@@ -57,6 +56,13 @@
                       ))
 
 (def client-info (r/atom {:user-name "user-0"}))
+
+(def sidebar-panel-states (r/atom {:contacts {:active false
+                                              :nav {:id "contacts-tab"
+                                                    :icon "glyphicon-user"}}
+                                   :chat {:active true
+                                          :nav {:id "chat-tab"
+                                                :icon "glyphicon-comment"}}}))
 
 (defn msg-item [{:keys [msg-id sent-from sent-time msg-str]}]
   (fn [{:keys [msg-id sent-from sent-time msg-str]}]
@@ -109,20 +115,62 @@
       [:span {:class "input-group-btn"}
        [button {:id "btn-send" :bsStyle "warning" :bsSize "sm"} "Send"]]]]))
 
+(defn sidebar-panel [{:keys [name active]}]
+  (fn [{:keys [name active]}]
+    (js/console.log active)
+    (let [props-panel (fn [active]
+                        {:class (str "tab-pane" (if active " active"))})]
+      [:div (props-panel active)
+       (str name)])))
+
+
+(defn activate-panel [name]
+  
+  (reduce #(update-in %1
+                      [%2 :active]
+                      (fn [_] (if (= %2 name) true false)))
+          @sidebar-panel-states
+          [:chat :contacts]))
+
+(defn sidebar-nav [{:keys [name id icon active]}]
+  (fn [{:keys [name id icon active]}]
+    (let [props-for-li (fn [name active]
+                         {:id name
+                          :class (str "sidebar-tab" (if active " highlighted"))})
+          props-for-a (fn [name] {:on-click (fn [_] (reset! sidebar-panel-states (activate-panel name)))})
+          props-for-icon (fn [icon] {:class (str "glyphicon " icon)})]
+      
+      [:li (props-for-li id active)
+       [:a (props-for-a name)
+        [:span (props-for-icon icon)]]])))
+
+(defn sidebar-navs-list []
+  (fn []
+    (let [props-for-nav (fn [name]
+                          (let [nav-states (get-in @sidebar-panel-states [name :nav])
+                                active (get-in @sidebar-panel-states [name :active])]
+                            (assoc nav-states :name name :active active )))]
+      [:ul {:class "sidebar-tabs nav nav-justified"}
+       [sidebar-nav (props-for-nav :contacts)]
+       [sidebar-nav (props-for-nav :chat)]
+       ])))
+
+(defn sidebar-panel-group []
+  (fn []
+    (let [props-for-panel (fn [name]
+                            (let [active (get-in @sidebar-panel-states [name :active])]
+                              {:name name :active active}))]
+      [:div {:class "tab-content"}
+       [sidebar-panel (props-for-panel :contacts)]
+       [sidebar-panel (props-for-panel :chat)]])))
+
 (defn sidebar-container []
   (fn []
     [:div {:id "sidebar-container" :class "cp-container"}
-     [:div {:class "sidebar-panel tabbable tabs-below"}
-      [:div {:class "tab-content"}
-       [:div {:class "tab-pane active"}
-        "sidebar pane 1"]
-       [:div {:class "tab-pane"}
-        "sidebar pane 2"]]
-      [:ul {:class "sidebar-tabs nav nav-justified"}
-       [:li {:id "contacts-tab" :class "sidebar-tab highlighted"}
-        [:a "tab-one"]]
-       [:li {:id "chat-tab" :class "sidebar-tab"}
-        [:a "tab-two"]]]]]))
+     [:div {:class "sidebar-panel"}
+      [sidebar-panel-group]
+      [sidebar-navs-list]]]))
+
 
 (defn chat-container []
   (fn []
