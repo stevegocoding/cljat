@@ -39,6 +39,7 @@ html, body {
 
 .tab-pane.active {
     display: block;
+    height: 80%;
 }
 
 .sidebar-tabs {
@@ -81,6 +82,35 @@ html, body {
     list-style: none;
     margin: 0;
     padding: 0;
+}
+
+
+/** chat channel list */
+.chat-channel-list {
+    list-style: none;
+    overflow-y: scroll;
+    height: 900px;
+}
+
+.chat-channel-list li {
+    border-bottom: 1px solid #eee;
+}
+
+.chat-channel-list li a {
+    position: relative;
+    height: 45px;
+    display: block;
+    padding: 10px;
+    text-decoration: none;
+}
+
+.chat-channel-list li.active a {
+  background-color: #f1f5fc;
+}
+
+.chat-channel-list li a .chat-channel-title, 
+.chat-channel-list li a .chat-channel-title:hover {
+  color: #777;
 }
 
 /*

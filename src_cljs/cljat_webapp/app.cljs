@@ -33,7 +33,7 @@
                        {:msg-id "msg-0003"
                         :sent-from "user-0"
                         :sent-time "xx-xx-xxxx"
-                        :msg-str "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur bibendum ornare dolor, quis ullamcorper ligula sodales."
+                        :msg-str "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur bibendum ornare dolor, quis ullamcorper ligula sodalels."
                         }
 
                        {:msg-id "msg-0004"
@@ -51,11 +51,103 @@
                        {:msg-id "msg-0006"
                         :sent-from "Mike"
                         :sent-time "xx-xx-xxxx"
-                        :msg-str "hehehehheehhehehe"
+                        :msg-str "laskdjflkjsadfjk"
                         }]
                       ))
 
 (def client-info (r/atom {:user-name "user-0"}))
+(def chat-channel-states (r/atom [{:id "u-a-b"
+                                   :members ["user-a", "user-b"]
+                                   :active true}
+                                  {:id "u-b-c"
+                                   :members ["user-b", "user-c"]
+                                   :active false}
+                                  {:id "u-b-c1"
+                                   :members ["user-b", "user-c"]
+                                   :active false}
+                                  {:id "u-b-c2"
+                                   :members ["user-b", "user-c"]
+                                   :active false}
+                                  {:id "u-b-c3"
+                                   :members ["user-b", "user-c"]
+                                   :active false}
+                                  {:id "u-b-c4"
+                                   :members ["user-b", "user-c"]
+                                   :active false}
+                                  {:id "u-b-c5"
+                                   :members ["user-b", "user-c"]
+                                   :active false}
+                                  {:id "u-b-c6"
+                                   :members ["user-b", "user-c"]
+                                   :active false}
+                                  {:id "u-b-c7"
+                                   :members ["user-b", "user-c"]
+                                   :active false}
+                                  {:id "u-b-c8"
+                                   :members ["user-b", "user-c"]
+                                   :active false}
+
+                                  {:id "u-b-c9"
+                                   :members ["user-b", "user-c"]
+                                   :active false}
+
+                                  {:id "u-b-c10"
+                                   :members ["user-b", "user-c"]
+                                   :active false}
+
+                                  {:id "u-b-c11"
+                                   :members ["user-b", "user-c"]
+                                   :active false}
+
+                                  {:id "u-b-c66"
+                                   :members ["user-b", "user-c"]
+                                   :active false}
+                                  {:id "u-b-c77"
+                                   :members ["user-b", "user-c"]
+                                   :active false}
+                                  {:id "u-b-c88"
+                                   :members ["user-b", "user-c"]
+                                   :active false}
+
+                                  {:id "u-b-c99"
+                                   :members ["user-b", "user-c"]
+                                   :active false}
+
+                                  {:id "u-b-c101"
+                                   :members ["user-b", "user-c"]
+                                   :active false}
+
+                                  {:id "u-b-c110"
+                                   :members ["user-b", "user-c"]
+                                   :active false}
+
+                                  {:id "u-b-c666"
+                                   :members ["user-b", "user-c"]
+                                   :active false}
+                                  {:id "u-b-c710"
+                                   :members ["user-b", "user-c"]
+                                   :active false}
+                                  {:id "u-b-c888"
+                                   :members ["user-b", "user-c"]
+                                   :active false}
+
+                                  {:id "u-b-c999"
+                                   :members ["user-b", "user-c"]
+                                   :active false}
+
+                                  {:id "u-b-c1111"
+                                   :members ["user-b", "user-c"]
+                                   :active false}
+
+                                  {:id "u-b-c1222"
+                                   :members ["user-b", "user-c"]
+                                   :active false}]))
+
+(defn is-channel-seleted? [ch]
+  (:active ch))
+
+(defn chat-channel-title-str [ch]
+  (:id ch))
 
 (def sidebar-panel-states (r/atom {:contacts {:active false
                                               :nav {:id "contacts-tab"
@@ -63,6 +155,11 @@
                                    :chat {:active true
                                           :nav {:id "chat-tab"
                                                 :icon "glyphicon-comment"}}}))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Messages
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn msg-item [{:keys [msg-id sent-from sent-time msg-str]}]
   (fn [{:keys [msg-id sent-from sent-time msg-str]}]
@@ -115,17 +212,44 @@
       [:span {:class "input-group-btn"}
        [button {:id "btn-send" :bsStyle "warning" :bsSize "sm"} "Send"]]]]))
 
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Sidebar
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defn chat-channel-item [channel]
+  (let [highlighted (r/atom false)]
+    (fn [channel]
+      (let [props-for (fn [ch]
+                        {:li {:class (str "chat-channel" (if @highlighted " active"))
+                              :on-mouse-over (fn [_] (swap! highlighted (constantly true)))
+                              :on-mouse-out (fn [e] (swap! highlighted (constantly false)))}
+                         :a {:class "clearfix"}
+                         :div {:class "chat-channel-title"}})
+            props (props-for channel)]
+        [:li (:li props)
+         [:a (:a props)
+          [:div (:div props)
+           [:strong (chat-channel-title-str channel)]]]]))))
+
+(defn chat-channel-list []
+  (fn []
+    [:ul {:class "chat-channel-list"}
+     (for [channel @chat-channel-states]
+       ^{:key (:id channel)} [chat-channel-item channel])]))
+
 (defn sidebar-panel [{:keys [name active]}]
   (fn [{:keys [name active]}]
     (js/console.log active)
     (let [props-panel (fn [active]
                         {:class (str "tab-pane" (if active " active"))})]
       [:div (props-panel active)
-       (str name)])))
-
+       (cond
+         (= name :chat)
+         [chat-channel-list]
+         (= name :contacts) (str name))])))
 
 (defn activate-panel [name]
-  
   (reduce #(update-in %1
                       [%2 :active]
                       (fn [_] (if (= %2 name) true false)))
