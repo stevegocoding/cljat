@@ -57,91 +57,55 @@
 
 (def client-info (r/atom {:user-name "user-0"}))
 (def chat-channel-states (r/atom [{:id "u-a-b"
-                                   :members ["user-a", "user-b"]
-                                   :active true}
+                                   :members ["user-a", "user-b"]}
                                   {:id "u-b-c"
-                                   :members ["user-b", "user-c"]
-                                   :active false}
+                                   :members ["user-b", "user-c"]}
                                   {:id "u-b-c1"
-                                   :members ["user-b", "user-c"]
-                                   :active false}
+                                   :members ["user-b", "user-c"]}
                                   {:id "u-b-c2"
-                                   :members ["user-b", "user-c"]
-                                   :active false}
+                                   :members ["user-b", "user-c"]}
                                   {:id "u-b-c3"
-                                   :members ["user-b", "user-c"]
-                                   :active false}
+                                   :members ["user-b", "user-c"]}
                                   {:id "u-b-c4"
-                                   :members ["user-b", "user-c"]
-                                   :active false}
+                                   :members ["user-b", "user-c"]}
                                   {:id "u-b-c5"
-                                   :members ["user-b", "user-c"]
-                                   :active false}
+                                   :members ["user-b", "user-c"]}
                                   {:id "u-b-c6"
-                                   :members ["user-b", "user-c"]
-                                   :active false}
+                                   :members ["user-b", "user-c"]}
                                   {:id "u-b-c7"
-                                   :members ["user-b", "user-c"]
-                                   :active false}
+                                   :members ["user-b", "user-c"]}
                                   {:id "u-b-c8"
-                                   :members ["user-b", "user-c"]
-                                   :active false}
-
+                                   :members ["user-b", "user-c"]}
                                   {:id "u-b-c9"
-                                   :members ["user-b", "user-c"]
-                                   :active false}
-
+                                   :members ["user-b", "user-c"]}
                                   {:id "u-b-c10"
-                                   :members ["user-b", "user-c"]
-                                   :active false}
-
+                                   :members ["user-b", "user-c"]}
                                   {:id "u-b-c11"
-                                   :members ["user-b", "user-c"]
-                                   :active false}
-
+                                   :members ["user-b", "user-c"]}
                                   {:id "u-b-c66"
-                                   :members ["user-b", "user-c"]
-                                   :active false}
+                                   :members ["user-b", "user-c"]}
                                   {:id "u-b-c77"
-                                   :members ["user-b", "user-c"]
-                                   :active false}
+                                   :members ["user-b", "user-c"]}
                                   {:id "u-b-c88"
-                                   :members ["user-b", "user-c"]
-                                   :active false}
-
+                                   :members ["user-b", "user-c"]}
                                   {:id "u-b-c99"
-                                   :members ["user-b", "user-c"]
-                                   :active false}
-
+                                   :members ["user-b", "user-c"]}
                                   {:id "u-b-c101"
-                                   :members ["user-b", "user-c"]
-                                   :active false}
-
+                                   :members ["user-b", "user-c"]}
                                   {:id "u-b-c110"
-                                   :members ["user-b", "user-c"]
-                                   :active false}
-
+                                   :members ["user-b", "user-c"]}
                                   {:id "u-b-c666"
-                                   :members ["user-b", "user-c"]
-                                   :active false}
+                                   :members ["user-b", "user-c"]}
                                   {:id "u-b-c710"
-                                   :members ["user-b", "user-c"]
-                                   :active false}
+                                   :members ["user-b", "user-c"]}
                                   {:id "u-b-c888"
-                                   :members ["user-b", "user-c"]
-                                   :active false}
-
+                                   :members ["user-b", "user-c"]}
                                   {:id "u-b-c999"
-                                   :members ["user-b", "user-c"]
-                                   :active false}
-
+                                   :members ["user-b", "user-c"]}
                                   {:id "u-b-c1111"
-                                   :members ["user-b", "user-c"]
-                                   :active false}
-
+                                   :members ["user-b", "user-c"]}
                                   {:id "u-b-c1222"
-                                   :members ["user-b", "user-c"]
-                                   :active false}]))
+                                   :members ["user-b", "user-c"]}]))
 
 (defn is-channel-seleted? [ch]
   (:active ch))

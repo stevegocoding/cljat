@@ -10,7 +10,8 @@
              [webjars :refer :all]
              [defaults :refer :all])
             (server.components
-             [jetty :refer [new-web-server]]
+             [http-kit :refer [new-web-server]]
+             ;;[jetty :refer [new-web-server]]
              [handler :refer [new-handler]]
              [middleware :refer [new-middleware]]
              [endpoint :refer [new-endpoint]])
