@@ -4,7 +4,8 @@
             [schema.core :as s]
             [schema.coerce :as coerce]
             [schema.utils :as s-utils]
-            [server.schema :refer :all]))
+            [server.schema :refer :all]
+            [clojure.tools.logging :as log]))
 
 (def WebOptions
   {:host HostName
@@ -25,19 +26,16 @@
 
 (defrecord HttpKitServer [options]
   component/Lifecycle
+  
   (start [component]
-    (if (:server component)
-      component
-      (let [handler (atom (delay (get-in component [:handler :handler-fn])))
-            server (atom (run-server (fn [req] (@@handler req)) options))]
-        (assoc component :server server))))
+    (let [handler (get-in component [:handler :handler-fn])
+          server (run-server handler options)]
+      (assoc component :server server)))
 
   (stop [component]
-    (when-let [server (:server component)]
-      (@server :timeout 100)
-      (reset! server nil)
-      (dissoc component :server)
-      component)))
+    (if-let [server (:server component)]
+      (server))
+    (assoc component :server nil)))
 
 (defn new-web-server
   [options]
