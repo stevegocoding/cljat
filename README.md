@@ -26,7 +26,10 @@ docker run --rm -t --volumes-from=lein_dev_deps -v $(pwd):/webapp -p 8080:8080 -
 * Connect to nRepl server with Emacs/Cider   
 cider-connect to $(docker-machine ip):55555
 
-
+* Redis
+```
+docker run --name cljat-redis -d redis
+```
 
 ## License
 

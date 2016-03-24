@@ -29,6 +29,9 @@
                  ;; redis client
                  [com.taoensso/carmine "2.12.2"]
 
+                 ;; websocket 
+                 [com.taoensso/sente "1.8.1"]
+
                  [ring/ring "1.4.0"]
                  [ring/ring-json "0.4.0"]
                  [ring/ring-headers "0.1.3"]
