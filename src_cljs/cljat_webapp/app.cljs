@@ -176,8 +176,6 @@
       [:span {:class "input-group-btn"}
        [button {:id "btn-send" :bsStyle "warning" :bsSize "sm"} "Send"]]]]))
 
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Sidebar
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -289,9 +287,67 @@
         [chat-container]]
        ]]]))
 
-(defn mount-root []
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn message-box [new-msg-channel]
+  (let [!input-value (r/atom nil)]
+    (fn [new-msg-channel]
+      [:div
+       [:h3 "Send a message to server:"]
+       [:input {:type "text"
+                :size 50
+                :autofocus true
+                :value @!input-value
+                :on-change (fn [e]
+                             (reset! !input-value (.-value (.-target e))))
+                :on-key-press (fn [e]
+                                (when (= 13 (.-charCode e))
+                                  (put! new-msg-channel @!input-value)
+                                  (reset! !input-value "")))}]])))
+
+(defn message-list [!msgs new-msg-channel]
+  (fn [!msg new-msg-channel]
+    [:div
+     [:h3 "Messages from the server"]
+     [:ul
+      (if-let [msgs (seq @!msgs)]
+        (for [msg msgs]
+          ^{:key msg} [:li (pr-str msg)])
+        [:li "None yet"])]]))
+
+(defn message-component [!msgs new-msg-channel]
+  [:div
+   [message-list !msgs]
+   [message-box new-msg-channel]])
+
+
+(defn add-message [msgs new-msg]
+  ;; keep the most recent 10 messages
+  (->> (cons new-msg msgs)
+       (take 10)))
+
+(defn receive-msgs! [!msgs server-ch]
+  ;; get the message from the receiving channel, add it to messages atom
+  (go-loop []
+    (let [{:keys [message error] :as msg} (<! server-ch)]
+      (swap! !msg add-message (cond
+                                error {:error error}
+                                (nil? message) {:type :connection-closed}
+                                message message)))
+    (when message
+      (recur))))
+
+(defn send-msgs! [new-msg-ch server-ch]
+  ;; send all the messages to the server
+  (go-loop []
+    (when-let [msg (<! new-msg-ch)]
+      (>! server-ch msg)
+      (recur))))
+
+(defn mount-root [!msgs new-msg-channel]
   (r/render-component
-   [app]
+   ;; [app]
+   [message-component !msgs new-msg-channel]
    (.getElementById js/document "app")))
 
 (defn fig-reload []
@@ -299,4 +355,22 @@
   (mount-root))
 
 (defn ^:export run []
+  (go
+    (let [{:keys [ws-channel error]} (<! ws-ch "ws://localhost:8080/ws"
+                                         {:format :transit-json})]
+      (if error
+        ;; connection failed, print error
+        (js/console.log (str "Couldn't connect to websocket: " error))
+
+        (let [;; !msgs shared state
+              !msgs (r/atom [])
+              ;; feedback loop from the view
+              ;; any messages that the view puts on here are to sent to the server
+              new-msg-channel (chan)]
+          
+          ;; create processes
+          (receive-msgs! !msgs new-msg-ch)
+          (send-msgs! new-msg-channel ws-channel)
+          )
+        )))
   (mount-root))

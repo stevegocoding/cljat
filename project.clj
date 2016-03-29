@@ -31,6 +31,7 @@
 
                  ;; websocket 
                  [com.taoensso/sente "1.8.1"]
+                 ;; [jarohen/chord "0.7.0"]
 
                  [ring/ring "1.4.0"]
                  [ring/ring-json "0.4.0"]

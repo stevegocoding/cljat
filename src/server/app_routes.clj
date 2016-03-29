@@ -1,8 +1,9 @@
 (ns server.app-routes
-  (:require [compojure.route :as route]
-            [compojure.core :refer [routes GET POST ANY]]
+  (:require [clojure.core.async :refer [<! >! put! take! close! thread go go-loop]]
             [clojure.tools.logging :as log]
-            [clojure.java.io :as io]
+            (compojure
+             [core :refer [routes GET POST ANY]]
+             [route :as route])
             [server.layout :as layout]))
 
 ;; App Routes
@@ -12,7 +13,10 @@
   [request]
   (layout/render "home.html" {:home-title "cljat home"}))
 
+
 (defn new-app-routes
-  [handler]
-  (routes (GET "/" request (home-route request))
-          #_(route/not-found (slurp (io/resource "404.html")))))
+  [{:keys [ws-handler] :as endpoint-comp}]
+  (let [ws-handshake-fn (:ws-handshake-fn ws-handler)]
+    (routes (GET "/" request (home-route request))
+            (GET "/ws" req (ws-handshake-fn req))
+            #_(route/not-found (slurp (io/resource "404.html"))))))

@@ -3,6 +3,7 @@
             [clojure.pprint :refer [pprint]]
             [clojure.tools.namespace.repl :refer [refresh refresh-all]]
             [clojure.tools.logging :as log]
+            [clojure.core.async :as a]
             [environ.core :refer [env]]
             (ring.middleware
              [reload :refer :all]
@@ -14,7 +15,10 @@
              ;;[jetty :refer [new-web-server]]
              [handler :refer [new-handler]]
              [middleware :refer [new-middleware]]
-             [endpoint :refer [new-endpoint]])
+             [endpoint :refer [new-endpoint]]
+             [redis :refer [new-redis]]
+             [ws-handler :refer [new-ws-handler]]
+             [msg-router :refer [new-msg-router]])
             [server.app-routes :refer [new-app-routes]]
             [clj-http.client :as http]
             [figwheel-sidecar.repl-api :refer :all]))
@@ -25,20 +29,51 @@
   []
   {:web {:host (env :web-host)
          :port (env :web-port)
-         :join? (if (= (env :cljat-env) "development") false true)}})
+         :join? (if (= (env :cljat-env) "development") false true)}
+   :redis {:host (env :redis-host)
+           :port (env :redis-port)}})
 
 (defn dev-system
   [sys-config]
   (-> (component/system-map
+       ;; The core.async channel from ws handler to message router
+       :ws-router-chan (a/chan)
+
+       ;; The core.async channel from message router to ws handler 
+       :router-ws-chan (a/chan)
+
+       ;; Middlewares
        :middleware (new-middleware [[wrap-stacktrace]
                                     [wrap-webjars]
                                     [wrap-defaults site-defaults]
                                     [wrap-reload]])
+       ;; Redis client
+       :redis (new-redis (:redis sys-config))
+
+       ;; A worker that handles the websocket messages to put them on an outgoing channel 
+       :ws-handler (new-ws-handler)
+
+       ;; A worker that take a message from an incoming channel, publish to redis and-
+       ;; put the response message on an outgoing channel
+       :msg-router (new-msg-router)
+
+       ;; Compojure route
        :routes (new-endpoint new-app-routes)
+
+       ;; Ring handler 
        :handler (new-handler)
+
+       ;; Http-kit server
        :web-server (new-web-server (:web sys-config)))
+      
       (component/system-using
-       {:handler [:middleware :routes]
+       {:ws-hanlder [:router-ws-chan
+                     :ws-router-chan]
+        :msg-router [:ws-router-chan
+                     :router-ws-chan
+                     :redis]
+        :routes [:ws-handler]
+        :handler [:middleware :routes]
         :web-server [:handler]})))
 
 (defn start-sys
