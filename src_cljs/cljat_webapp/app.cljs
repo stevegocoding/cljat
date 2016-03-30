@@ -2,7 +2,8 @@
   (:require-macros [cljs.core.async.macros :refer [go go-loop]])
   (:require [cljs.core.async :refer [<! >! chan timeout close! sliding-buffer take! put! alts!]]
             [reagent.core :as r]
-            [cljsjs.react-bootstrap]))
+            [cljsjs.react-bootstrap]
+            [taoensso.sente :as sente]))
 
 (enable-console-print!)
 
@@ -289,7 +290,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn message-box [new-msg-channel]
+(defn message-input [new-msg-channel]
   (let [!input-value (r/atom nil)]
     (fn [new-msg-channel]
       [:div
@@ -305,49 +306,50 @@
                                   (put! new-msg-channel @!input-value)
                                   (reset! !input-value "")))}]])))
 
-(defn message-list [!msgs new-msg-channel]
-  (fn [!msg new-msg-channel]
+(defn message-list [msgs]
+  (fn [msg]
     [:div
      [:h3 "Messages from the server"]
      [:ul
-      (if-let [msgs (seq @!msgs)]
+      (if-let [msgs (seq @msgs)]
         (for [msg msgs]
           ^{:key msg} [:li (pr-str msg)])
         [:li "None yet"])]]))
 
-(defn message-component [!msgs new-msg-channel]
+(defn message-component [msgs new-msg-channel]
   [:div
-   [message-list !msgs]
-   [message-box new-msg-channel]])
+   [message-list msgs]
+   [message-input new-msg-channel]])
 
 
 (defn add-message [msgs new-msg]
   ;; keep the most recent 10 messages
-  (->> (cons new-msg msgs)
-       (take 10)))
+  (cons new-msg msgs))
 
-(defn receive-msgs! [!msgs server-ch]
+(defn receive-msgs [msgs recv-ch]
   ;; get the message from the receiving channel, add it to messages atom
-  (go-loop []
-    (let [{:keys [message error] :as msg} (<! server-ch)]
-      (swap! !msg add-message (cond
-                                error {:error error}
-                                (nil? message) {:type :connection-closed}
-                                message message)))
-    (when message
-      (recur))))
+  (let [ctrl-ch (chan)]
+    (go-loop []
+      (let [[val ch] (alts! [recv-ch ctrl-ch])]
+        (when-let [{:keys [id data event] :as ev-msg} val]
+          (swap! msgs add-message ev-msg)
+          (recur))))
 
-(defn send-msgs! [new-msg-ch server-ch]
-  ;; send all the messages to the server
-  (go-loop []
-    (when-let [msg (<! new-msg-ch)]
-      (>! server-ch msg)
-      (recur))))
+    ctrl-ch))
 
-(defn mount-root [!msgs new-msg-channel]
+(defn send-msgs [send-fn]
+  (let [new-msg-ch (chan)]
+    (go-loop []
+      (when-let [msg (<! new-msg-ch)]
+        (send-fn msg)
+        (recur))))
+  
+  new-msg-ch)
+
+(defn mount-root [msgs new-msg-ch]
   (r/render-component
    ;; [app]
-   [message-component !msgs new-msg-channel]
+   [message-component msgs new-msg-ch]
    (.getElementById js/document "app")))
 
 (defn fig-reload []
@@ -355,22 +357,10 @@
   (mount-root))
 
 (defn ^:export run []
-  (go
-    (let [{:keys [ws-channel error]} (<! ws-ch "ws://localhost:8080/ws"
-                                         {:format :transit-json})]
-      (if error
-        ;; connection failed, print error
-        (js/console.log (str "Couldn't connect to websocket: " error))
-
-        (let [;; !msgs shared state
-              !msgs (r/atom [])
-              ;; feedback loop from the view
-              ;; any messages that the view puts on here are to sent to the server
-              new-msg-channel (chan)]
-          
-          ;; create processes
-          (receive-msgs! !msgs new-msg-ch)
-          (send-msgs! new-msg-channel ws-channel)
-          )
-        )))
-  (mount-root))
+  (let [{:keys [chsk recv-ch send-fn state]}
+        (sente/make-channel-socket-client! "/ws" {:type :ws})
+        msgs (r/atom [{}])
+        new-msg-ch (send-msgs send-fn)
+        stop-ch (receive-msgs msgs recv-ch)]
+    
+    (mount-root msgs new-msg-ch)))

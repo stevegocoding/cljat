@@ -18,7 +18,8 @@
              [endpoint :refer [new-endpoint]]
              [redis :refer [new-redis]]
              [ws-handler :refer [new-ws-handler]]
-             [msg-router :refer [new-msg-router]])
+             [msg-router :refer [new-msg-router]]
+             [msg-echo :refer [new-msg-echo]])
             [server.app-routes :refer [new-app-routes]]
             [clj-http.client :as http]
             [figwheel-sidecar.repl-api :refer :all]))
@@ -37,10 +38,10 @@
   [sys-config]
   (-> (component/system-map
        ;; The core.async channel from ws handler to message router
-       :ws-router-chan (a/chan)
+       :ws-router-ch (a/chan)
 
        ;; The core.async channel from message router to ws handler 
-       :router-ws-chan (a/chan)
+       :router-ws-ch (a/chan)
 
        ;; Middlewares
        :middleware (new-middleware [[wrap-stacktrace]
@@ -48,14 +49,17 @@
                                     [wrap-defaults site-defaults]
                                     [wrap-reload]])
        ;; Redis client
-       :redis (new-redis (:redis sys-config))
+       ;; :redis (new-redis (:redis sys-config))
 
        ;; A worker that handles the websocket messages to put them on an outgoing channel 
        :ws-handler (new-ws-handler)
 
        ;; A worker that take a message from an incoming channel, publish to redis and-
        ;; put the response message on an outgoing channel
-       :msg-router (new-msg-router)
+       ;; :msg-router (new-msg-router)
+
+       ;; A test message echo component
+       :msg-echo (new-msg-echo)
 
        ;; Compojure route
        :routes (new-endpoint new-app-routes)
@@ -67,11 +71,11 @@
        :web-server (new-web-server (:web sys-config)))
       
       (component/system-using
-       {:ws-hanlder [:router-ws-chan
-                     :ws-router-chan]
-        :msg-router [:ws-router-chan
-                     :router-ws-chan
-                     :redis]
+       {:ws-handler [:router-ws-ch :ws-router-ch]
+        ;; :msg-router [:ws-router-ch :router-ws-ch :redis]
+        :msg-echo {:in-ch :ws-router-ch
+                  :out-ch :router-ws-ch}
+        
         :routes [:ws-handler]
         :handler [:middleware :routes]
         :web-server [:handler]})))

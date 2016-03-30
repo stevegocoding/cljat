@@ -33,6 +33,7 @@
                  [com.taoensso/sente "1.8.1"]
                  ;; [jarohen/chord "0.7.0"]
 
+                 ;; Handler and router
                  [ring/ring "1.4.0"]
                  [ring/ring-json "0.4.0"]
                  [ring/ring-headers "0.1.3"]
@@ -41,7 +42,10 @@
                  [ring-webjars "0.1.1"]
                  [compojure "1.4.0"]
                  [clj-http "2.1.0"]
+
+                 ;; Templating
                  [selmer "1.0.2"]
+                 ;; [hiccup "1.0.5"]
 
                  ;; Front-end stuff
                  [org.webjars/bootstrap "3.3.6"]
