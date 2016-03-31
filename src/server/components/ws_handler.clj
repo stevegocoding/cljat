@@ -44,7 +44,7 @@
     (let [{:keys [client-id ?data] :as msg} (<! out-ch)]
       (log/info "echo msg")
       (do
-        (send-fn :sente/all-users-without-uid [:cljat.webapp.server/echo {:data (str "echo" (:data ?data))}])
+        (send-fn client-id [:cljat.webapp.server/echo {:data (str "echo" (:data ?data))}])
         (recur)))))
 
 
@@ -54,7 +54,7 @@
   (start [component]
     (log/info "Starting WSHandler component ...")
     (let [{:keys [ch-recv send-fn ajax-post-fn ajax-get-or-ws-handshake-fn connected-uuids]}
-          (sente/make-channel-socket-server! sente-web-server-adapter {})
+          (sente/make-channel-socket-server! sente-web-server-adapter {:user-id-fn (fn [ring-req] (:client-id ring-req))})
           stop-recv-fn (start-msg-recv-loop! ch-recv ws-router-ch)]
 
       (start-msg-echo-loop! ws-router-ch send-fn)
