@@ -22,7 +22,9 @@
              [msg-echo :refer [new-msg-echo]])
             [server.app-routes :refer [new-app-routes]]
             [clj-http.client :as http]
-            [figwheel-sidecar.repl-api :refer :all]))
+            [figwheel-sidecar.repl-api :refer :all]
+            [taoensso.sente :as sente]
+            [taoensso.sente.server-adapters.http-kit :refer (sente-web-server-adapter)]))
 
 (def sys nil)
 
@@ -59,7 +61,7 @@
        ;; :msg-router (new-msg-router)
 
        ;; A test message echo component
-       :msg-echo (new-msg-echo)
+       ;; :msg-echo (new-msg-echo)
 
        ;; Compojure route
        :routes (new-endpoint new-app-routes)
@@ -73,8 +75,7 @@
       (component/system-using
        {:ws-handler [:router-ws-ch :ws-router-ch]
         ;; :msg-router [:ws-router-ch :router-ws-ch :redis]
-        :msg-echo {:in-ch :ws-router-ch
-                  :out-ch :router-ws-ch}
+        ;; :msg-echo {:in-ch :ws-router-ch :out-ch :router-ws-ch}
         
         :routes [:ws-handler]
         :handler [:middleware :routes]
@@ -118,3 +119,13 @@
   []
   (stop)
   (refresh :after 'user/go))
+
+(let [{:keys [ch-recv send-fn ajax-post-fn ajax-get-or-ws-handshake-fn connected-uuids]}
+          (sente/make-channel-socket! sente-web-server-adapter {:packer :edn})]
+      
+  (assoc {}
+         :recv-ch ch-recv
+         :send-fn send-fn
+         :ajax-post-fn ajax-post-fn
+         :ws-handshake-fn ajax-get-or-ws-handshake-fn
+         :client-uuids connected-uuids))

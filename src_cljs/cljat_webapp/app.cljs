@@ -290,6 +290,31 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(def msgs (r/atom [{}]))
+(def new-msg-ch (chan))
+(def stop-ch (chan))
+
+(defn add-message [msgs new-msg]
+  ;; keep the most recent 10 messages
+  (cons new-msg msgs))
+
+(defn receive-msgs [msgs recv-ch]
+  ;; get the message from the receiving channel, add it to messages atom
+  (go-loop []
+    (let [[val ch] (alts! [recv-ch stop-ch])]
+      (js/console.log "client recv!")
+      (when-let [{:keys [id data event] :as ev-msg} val]
+        (swap! msgs add-message event)
+        (recur)))))
+
+(defn send-msgs [send-fn]
+  (go-loop []
+    (when-let [msg (<! new-msg-ch)]
+      (js/console.log "message sent!")
+      (send-fn [:cljat.webapp/hello-msg {:data msg}])
+      (recur))))
+
+
 (defn message-input [new-msg-channel]
   (let [!input-value (r/atom nil)]
     (fn [new-msg-channel]
@@ -316,40 +341,16 @@
           ^{:key msg} [:li (pr-str msg)])
         [:li "None yet"])]]))
 
-(defn message-component [msgs new-msg-channel]
+(defn message-component []
   [:div
    [message-list msgs]
-   [message-input new-msg-channel]])
+   [message-input new-msg-ch]])
 
 
-(defn add-message [msgs new-msg]
-  ;; keep the most recent 10 messages
-  (cons new-msg msgs))
-
-(defn receive-msgs [msgs recv-ch]
-  ;; get the message from the receiving channel, add it to messages atom
-  (let [ctrl-ch (chan)]
-    (go-loop []
-      (let [[val ch] (alts! [recv-ch ctrl-ch])]
-        (when-let [{:keys [id data event] :as ev-msg} val]
-          (swap! msgs add-message ev-msg)
-          (recur))))
-
-    ctrl-ch))
-
-(defn send-msgs [send-fn]
-  (let [new-msg-ch (chan)]
-    (go-loop []
-      (when-let [msg (<! new-msg-ch)]
-        (send-fn msg)
-        (recur))))
-  
-  new-msg-ch)
-
-(defn mount-root [msgs new-msg-ch]
+(defn mount-root []
   (r/render-component
    ;; [app]
-   [message-component msgs new-msg-ch]
+   [message-component]
    (.getElementById js/document "app")))
 
 (defn fig-reload []
@@ -357,10 +358,8 @@
   (mount-root))
 
 (defn ^:export run []
-  (let [{:keys [chsk recv-ch send-fn state]}
-        (sente/make-channel-socket-client! "/ws" {:type :ws})
-        msgs (r/atom [{}])
-        new-msg-ch (send-msgs send-fn)
-        stop-ch (receive-msgs msgs recv-ch)]
-    
-    (mount-root msgs new-msg-ch)))
+  (let [{:keys [chsk ch-recv send-fn state]}
+        (sente/make-channel-socket-client! "/ws" {:type :ws})]
+    (send-msgs send-fn)
+    (receive-msgs msgs ch-recv)
+    (mount-root)))
