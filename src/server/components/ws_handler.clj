@@ -23,22 +23,6 @@
     
     (fn [] (put! stop-ch :stop))))
 
-#_(defn start-msg-recv-loop! [in-ch out-ch]
-  (log/info "Starting ws handler recv msg process ...")
-  (let [stop-ch (chan)]
-    (go-loop []
-      (when (alt!
-            [in-ch stop-ch] ([val ch] (if (= ch stop-ch)
-                                        false
-                                        (let [{:keys [event] :as msg} val]
-                                          (log/info "ws-msg-recv-loop -- take a message from recv channel")
-                                          (>! out-ch event)
-                                          (log/info "ws-msg-recv-loop -- put a message onto outgoing channnel")
-                                          true))))
-        (recur)))
-    
-    (fn [] (put! stop-ch :stop))))
-
 (defn start-msg-echo-loop! [out-ch send-fn]
   (go-loop []
     (let [{:keys [client-id ?data] :as msg} (<! out-ch)]
@@ -85,38 +69,3 @@
 
 (defn new-ws-handler []
   (map->WSHandler {}))
-
-
-
-#_(defn- -start-chsk-router!
-  [server? ch-recv event-msg-handler opts]
-  (let [{:keys [trace-evs? error-handler]} opts
-        ch-ctrl (chan)]
-
-    (go-loop []
-      (let [[v p] (async/alts! [ch-recv ch-ctrl])
-            stop? (enc/kw-identical? p  ch-ctrl)]
-
-        (when-not stop?
-          (let [{:as event-msg :keys [event]} v
-                [_ ?error]
-                (enc/catch-errors
-                  (when trace-evs? (tracef "Pre-handler event: %s" event))
-                  (event-msg-handler
-                    (if server?
-                      (have! server-event-msg? event-msg)
-                      (have! client-event-msg? event-msg))))]
-
-            (when-let [e ?error]
-              (let [[_ ?error2]
-                    (enc/catch-errors
-                      (if-let [eh error-handler]
-                        (error-handler e event-msg)
-                        (errorf e "Chsk router `event-msg-handler` error: %s" event)))]
-                (when-let [e2 ?error2]
-                  (errorf e2 "Chsk router `error-handler` error: %s" event))))
-
-            (recur)
-            ))))
-
-    (fn stop! [] (async/close! ch-ctrl))))

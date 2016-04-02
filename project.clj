@@ -26,12 +26,17 @@
                  ;; http-kit server
                  [http-kit "2.1.18"]
 
+                 ;; Database
+                 [org.clojure/java.jdbc "0.5.0"]
+                 [com.h2database/h2 "1.4.191"]
+                 [org.postgresql/postgresql "9.4-1206-jdbc41"]
+                 [migratus "0.8.13"]
+
                  ;; redis client
                  [com.taoensso/carmine "2.12.2"]
 
                  ;; websocket 
                  [com.taoensso/sente "1.8.1"]
-                 ;; [jarohen/chord "0.7.0"]
 
                  ;; Handler and router
                  [ring/ring "1.4.0"]
@@ -42,6 +47,11 @@
                  [ring-webjars "0.1.1"]
                  [compojure "1.4.0"]
                  [clj-http "2.1.0"]
+                 [buddy/buddy-core "0.11.0"]
+                 [buddy/buddy-auth "0.11.0"]
+                 [buddy/buddy-hashers "0.13.0"]
+                 [buddy/buddy-sign "0.11.0"]
+                 [clj-time "0.11.0"]
 
                  ;; Templating
                  [selmer "1.0.2"]
@@ -52,14 +62,14 @@
                  [org.webjars/font-awesome "4.5.0"]
                  [cljsjs/bootstrap "3.3.6-0"]
                  [cljsjs/react-bootstrap "0.28.1-1" :exclusions [org.webjars.bower/jquery]]
-                 [jayq "2.5.4"]
                  [reagent "0.6.0-alpha"]]
   
   :plugins [[lein-pprint "1.1.1"]
             [lein-ring "0.9.7"]
             [lein-cljsbuild "1.1.2"]
             [lein-figwheel "0.5.0-6"]
-            [lein-environ "1.0.2"]]
+            [lein-environ "1.0.2"]
+            [migratus-lein "0.2.6"]]
 
   ;; Clojurescript compiler configs
   :cljsbuild {:builds [{:id "dev"

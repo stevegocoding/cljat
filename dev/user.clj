@@ -4,6 +4,7 @@
             [clojure.tools.namespace.repl :refer [refresh refresh-all]]
             [clojure.tools.logging :as log]
             [clojure.core.async :as a]
+            [clojure.java.jdbc :as sql]
             [environ.core :refer [env]]
             (ring.middleware
              [reload :refer :all]
@@ -120,12 +121,15 @@
   (stop)
   (refresh :after 'user/go))
 
-(let [{:keys [ch-recv send-fn ajax-post-fn ajax-get-or-ws-handshake-fn connected-uuids]}
-          (sente/make-channel-socket! sente-web-server-adapter {:packer :edn})]
-      
-  (assoc {}
-         :recv-ch ch-recv
-         :send-fn send-fn
-         :ajax-post-fn ajax-post-fn
-         :ws-handshake-fn ajax-get-or-ws-handshake-fn
-         :client-uuids connected-uuids))
+
+(def h2-db {:classname "org.h2.Driver"
+            :subprotocol "h2"
+            :subname "~/tmp/cljat"
+            :user "sa"
+            :password ""})
+
+
+
+
+
+
