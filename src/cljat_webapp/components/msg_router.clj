@@ -1,4 +1,4 @@
-(ns server.components.msg-router
+(ns cljat-webapp.components.msg-router
   (:require [com.stuartsierra.component :as component]))
 
 

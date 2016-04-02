@@ -1,4 +1,4 @@
-(ns server.components.redis
+(ns cljat-webapp.components.redis
   (:require [com.stuartsierra.component :as component]
             [taoensso.carmine :as car]))
 

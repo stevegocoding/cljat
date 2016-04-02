@@ -1,11 +1,11 @@
-(ns server.components.jetty
+(ns cljat-webapp.components.jetty
   (:import org.eclipse.jetty.server.Server)
   (:require [com.stuartsierra.component :as component]
             [schema.core :as s]
             [schema.coerce :as coerce]
             [schema.utils :as s-utils]
             [ring.adapter.jetty :refer [run-jetty]]
-            [server.schema :refer :all]))
+            [cljat-webapp.schema :refer :all]))
 
 (def WebOptions
   {:host HostName

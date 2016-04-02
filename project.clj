@@ -107,7 +107,7 @@
   :target-path "target/%s/"
 
 ;;; Entry Point
-  :main server.main
+  :main cljat-webapp.main
   :nrepl-options {:init-ns user}
   
   :profiles {

@@ -1,4 +1,4 @@
-(ns server.system
+(ns cljat-webapp.system
   (:require [com.stuartsierra.component :as component]))
 
 (defn system

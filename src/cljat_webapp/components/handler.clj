@@ -1,4 +1,4 @@
-(ns server.components.handler
+(ns cljat-webapp.components.handler
   (:require [com.stuartsierra.component :as component]
             [compojure.core :as compojure]))
 

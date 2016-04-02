@@ -1,4 +1,4 @@
-(ns server.components.msg-echo
+(ns cljat-webapp.components.msg-echo
   (:require [clojure.tools.logging :as log]
             [clojure.core.async :refer [>! <! chan close! go go-loop alts!]]
             [com.stuartsierra.component :as component]))

@@ -1,4 +1,4 @@
-(ns server.components.ws-handler
+(ns cljat-webapp.components.ws-handler
   (:require [clojure.tools.logging :as log]
             [clojure.core.async :refer [>! <! put! take! chan close! go go-loop alts! alt!]]
             [com.stuartsierra.component :as component]

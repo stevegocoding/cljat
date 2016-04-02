@@ -1,4 +1,4 @@
-(ns server.components.middleware
+(ns cljat-webapp.components.middleware
   (:require [com.stuartsierra.component :as component]))
 
 (defn- middleware-fn

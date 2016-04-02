@@ -1,4 +1,4 @@
-(ns server.components.db
+(ns cljat-webapp.components.db
   (:require [com.stuartsierra.component :as component]))
 
 (defrecord DB []

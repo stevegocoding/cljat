@@ -14,13 +14,12 @@
             [compojure.route :as route]
             [compojure.core :refer [routes GET POST ANY]]
             [selmer.parser :as parser]
-            (server.components
+            (cljat-webapp.components
              [http-kit :refer [new-web-server]]
              ;;[jetty :refer [new-web-server]]
              [handler :refer [new-handler]]
              [middleware :refer [new-middleware]]
              [endpoint :refer [new-endpoint]])
-            [server.layout :as layout]
             [taoensso.carmine :as car :refer [wcar]]
             [taoensso.carmine.ring :refer [carmine-store]]))
 

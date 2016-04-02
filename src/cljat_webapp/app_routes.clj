@@ -1,4 +1,4 @@
-(ns server.app-routes
+(ns cljat-webapp.app-routes
   (:require [clojure.core.async :refer [<! >! put! take! close! thread go go-loop]]
             [clojure.tools.logging :as log]
             [ring.util.response :refer [response content-type]]

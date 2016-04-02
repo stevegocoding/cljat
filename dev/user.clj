@@ -11,7 +11,7 @@
              [stacktrace :refer :all]
              [webjars :refer :all]
              [defaults :refer :all])
-            (server.components
+            (cljat-webapp.components
              [http-kit :refer [new-web-server]]
              ;;[jetty :refer [new-web-server]]
              [handler :refer [new-handler]]
@@ -21,7 +21,7 @@
              [ws-handler :refer [new-ws-handler]]
              [msg-router :refer [new-msg-router]]
              [msg-echo :refer [new-msg-echo]])
-            [server.app-routes :refer [new-app-routes]]
+            [cljat-webapp.app-routes :refer [new-app-routes]]
             [clj-http.client :as http]
             [figwheel-sidecar.repl-api :refer :all]
             [taoensso.sente :as sente]

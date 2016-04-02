@@ -1,4 +1,4 @@
-(ns server.components.endpoint
+(ns cljat-webapp.components.endpoint
   (:require [clojure.tools.logging :as log]
             [com.stuartsierra.component :as component]))
 

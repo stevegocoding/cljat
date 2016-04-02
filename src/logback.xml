@@ -36,7 +36,7 @@
 
   <!-- ############################################# -->
 
-  <logger name="server" level="DEBUG" >
+  <logger name="cljat-webapp" level="DEBUG" >
     <appender-ref ref="CONSOLE"/>
   </logger>
 

@@ -1,11 +1,11 @@
-(ns server.components.http-kit
-  (:require [com.stuartsierra.component :as component]
+(ns cljat-webapp.components.http-kit
+  (:require [clojure.tools.logging :as log]
+            [com.stuartsierra.component :as component]
             [org.httpkit.server :refer [run-server]]
             [schema.core :as s]
             [schema.coerce :as coerce]
             [schema.utils :as s-utils]
-            [server.schema :refer :all]
-            [clojure.tools.logging :as log]))
+            [cljat-webapp.schema :refer :all]))
 
 (def WebOptions
   {:host HostName
@@ -28,11 +28,13 @@
   component/Lifecycle
   
   (start [component]
+    (log/info "Starting http-kit server ...")
     (let [handler (get-in component [:handler :handler-fn])
           server (run-server handler options)]
       (assoc component :server server)))
 
   (stop [component]
+    (log/info "Stopping http-kit server ...")
     (if-let [server (:server component)]
       (server))
     (assoc component :server nil)))

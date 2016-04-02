@@ -1,4 +1,4 @@
-(ns server.layout
+(ns cljat-webapp.layout
   (:require [selmer.parser :as parser]
             [compojure.response :refer [Renderable]]
             [ring.util.response :refer [content-type response]]
