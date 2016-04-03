@@ -1,13 +1,18 @@
 (ns cljat-webapp.components.db
-  (:require [com.stuartsierra.component :as component]))
+  (:require [clojure.java.io :as io]
+            [clojure.java.jdbc :as sql]
+            [com.stuartsierra.component :as component]))
 
-(defrecord DB []
+(defrecord DB [config db-spec]
   component/Lifecycle
 
   (start [component]
+    
     )
 
   (stop [component]
     )
   )
 
+(defn new-db [config]
+  (map->DB {:config config}))

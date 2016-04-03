@@ -29,6 +29,7 @@
                  ;; Database
                  [org.clojure/java.jdbc "0.5.0"]
                  [com.h2database/h2 "1.4.191"]
+                 [com.mchange/c3p0 "0.9.5.2"]
                  [org.postgresql/postgresql "9.4-1206-jdbc41"]
                  [migratus "0.8.13"]
 

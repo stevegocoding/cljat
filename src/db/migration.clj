@@ -15,4 +15,9 @@
 (defn clear-h2-db []
   (sql/execute! @h2-spec ["DROP ALL OBJECTS"]))
 
-(migratus/migrate migrate-config)
+(defn create-migration [name]
+  (migratus/create migrate-config name))
+
+(defn reset-h2-db []
+  (clear-h2-db)
+  (migratus/migrate migrate-config))
