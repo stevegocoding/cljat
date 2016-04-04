@@ -7,11 +7,11 @@
   
   (start [component]
     (log/info "Starting Endpoint component ...")
-    (assoc component :routes (routes-fn component)))
+    (assoc component :handler (routes-fn component)))
 
   (stop [component]
     (log/info "Stopping Endpoint component ...")
-    (do (dissoc component :routes)
+    (do (dissoc component :handler)
         component)))
 
 (defn new-endpoint [routes-fn]

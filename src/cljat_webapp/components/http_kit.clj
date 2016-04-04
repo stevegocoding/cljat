@@ -29,7 +29,7 @@
   
   (start [component]
     (log/info "Starting http-kit server ...")
-    (let [handler (get-in component [:handler :handler-fn])
+    (let [handler (get-in component [:routes :handler])
           server (run-server handler options)]
       (assoc component :server server)))
 

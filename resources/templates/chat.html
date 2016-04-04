@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8"/>
+    <title>{{ home-title }}</title>
+  </head>
+  
+  <body>
+
+      <div class="container">
+          <div id="app"></div>
+      </div>
+
+      <!-- Scripts and Styles  -->
+      {% style "/assets/bootstrap/css/bootstrap.min.css" %}
+
+      {% style "/css/home.css"  %}
+
+      {% if dev  %}
+          {% script "/js/app.js" %}
+      {% else %}
+          {% script "/js/app.js" %}
+      {% endif %}
+
+      <!-- app entry point -->
+      <script type="text/javascript">cljat_webapp.app.run()</script>
+  </body>
+</html>

@@ -47,10 +47,8 @@
        :router-ws-ch (a/chan)
 
        ;; Middlewares
-       :middleware (new-middleware [[wrap-stacktrace]
-                                    [wrap-webjars]
-                                    [wrap-defaults site-defaults]
-                                    [wrap-reload]])
+       ;; :middleware (new-middleware [[wrap-stacktrace] [wrap-webjars] [wrap-defaults site-defaults] [wrap-reload]])
+       
        ;; Redis client
        ;; :redis (new-redis (:redis sys-config))
 
@@ -68,7 +66,7 @@
        :routes (new-endpoint new-app-routes)
 
        ;; Ring handler 
-       :handler (new-handler)
+       ;; :handler (new-handler)
 
        ;; Http-kit server
        :web-server (new-web-server (:web sys-config)))
@@ -79,8 +77,10 @@
         ;; :msg-echo {:in-ch :ws-router-ch :out-ch :router-ws-ch}
         
         :routes [:ws-handler]
-        :handler [:middleware :routes]
-        :web-server [:handler]})))
+        ;; :handler [:middleware :routes]
+        ;; :web-server [:handler]
+        :web-server [:routes]
+        })))
 
 (defn start-sys
   [s]
