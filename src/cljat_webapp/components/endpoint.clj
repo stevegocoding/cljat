@@ -12,12 +12,16 @@
     (let [privkey (->
                     (:private-key auth-config)
                     (io/resource)
-                    (keys/private-key (:passphrase auth-config)))]
-      (assoc component :handler (routes-fn (assoc component :privkey privkey)))))
+                    (keys/private-key (:passphrase auth-config)))
+          pubkey (->
+                   (:public-key auth-config)
+                   (io/resource)
+                   (keys/public-key))]
+      (assoc component :handler (routes-fn (assoc component :privkey privkey :pubkey pubkey)))))
 
   (stop [component]
     (log/info "Stopping Endpoint component ...")
-    (assoc component :privkey nil :handler nil)))
+    (assoc component :privkey nil :pubkey nil :handler nil)))
 
 (defn new-endpoint [auth-config routes-fn]
   (map->Endpoint {:auth-config auth-config :routes-fn routes-fn}))

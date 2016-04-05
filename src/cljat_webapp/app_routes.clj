@@ -11,6 +11,7 @@
     (compojure
       [core :refer [context routes GET POST ANY]]
       [route :as route])
+    [clj-http.client :as http]
     [selmer.parser :as parser]
     [environ.core :refer [env]]
     [cljat-webapp.api :refer [api-routes]]))
