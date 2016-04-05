@@ -1,10 +1,35 @@
 (ns cljat-webapp.api
-  (:require [compojure.api.sweet :refer [api context GET]]
-    [ring.util.http-response :refer [ok]])
+  (:require [clojure.tools.logging :as log]
+            [compojure.api.sweet :refer [api context GET POST]]
+            [ring.util.http-response :refer [ok]]
+            [buddy.hashers :as hs]
+            [buddy.sign.jws :as jws]
+            [clj-time.core :as t]
+            [cljat-webapp.model :as m])
   (:import java.lang.String))
 
 
-(defn api-routes [{:as endpoint-comp}]
+(defn- check-user-creds [db email password]
+  (let [user (m/find-user-by-email db email)]
+    (if user
+      (if (hs/check password (:password user))
+        (dissoc user :password)
+        nil))))
+
+(defn- sign-token [claims pkey]
+  (let [exp (t/plus (t/now) (t/days 1))]
+    (jws/sign (assoc claims :exp exp) pkey {:alg :rs256})))
+
+(defn- auth-token-response [db private-key {:keys [email password]}]
+  (let [row (check-user-creds db email password)
+        token (sign-token {:user-id 1} private-key)]
+    (if row
+      {:status 201 :body {:userid (:user_id row)
+                          :token token}}
+      {:status 401 :body {:userid -1
+                          :token -1}})))
+
+(defn api-routes [{:keys [db privkey] :as endpoint-comp}]
   (api
     {:swagger {:ui "/swagger-ui"
                :spec "/swagger.json"
@@ -18,4 +43,10 @@
       (GET "/hello" []
         :return {:message String}
         :query-params [name :- String]
-        (ok {:message (str "Hello, " name)})))))
+        (ok {:message (str "Hello, " name)}))
+
+      (POST "/auth-token" req
+        :return {:userid Long :token String}
+        :body-params [email :- String
+                      password :- String]
+        (auth-token-response db privkey (:params req))))))

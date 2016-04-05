@@ -1,18 +1,23 @@
 (ns cljat-webapp.components.endpoint
-  (:require [clojure.tools.logging :as log]
-            [com.stuartsierra.component :as component]))
+  (:require [clojure.java.io :as io]
+            [clojure.tools.logging :as log]
+            [com.stuartsierra.component :as component]
+            [buddy.core.keys :as keys]))
 
-(defrecord Endpoint [routes-fn]
+(defrecord Endpoint [auth-config routes-fn]
   component/Lifecycle
   
   (start [component]
     (log/info "Starting Endpoint component ...")
-    (assoc component :handler (routes-fn component)))
+    (let [privkey (->
+                    (:private-key auth-config)
+                    (io/resource)
+                    (keys/private-key (:passphrase auth-config)))]
+      (assoc component :handler (routes-fn (assoc component :privkey privkey)))))
 
   (stop [component]
     (log/info "Stopping Endpoint component ...")
-    (do (dissoc component :handler)
-        component)))
+    (assoc component :privkey nil :handler nil)))
 
-(defn new-endpoint [routes-fn]
-  (->Endpoint routes-fn))
+(defn new-endpoint [auth-config routes-fn]
+  (map->Endpoint {:auth-config auth-config :routes-fn routes-fn}))

@@ -52,20 +52,18 @@
 
   (stop [component]
     (log/info "Stopping WSHandler component ...")
-    (do
-      ;; stop the go-loop process
-      (when-let [stop-recv-fn! (:stop-recv-fn component)]
-        (stop-recv-fn!))
 
-      (dissoc component
-              :recv-ch
-              :send-fn
-              :ajax-post-fn
-              :ws-handshake-fn
-              :client-uuids
-              :stop-recv-fn)
-      
-      component)))
+    ;; stop the go-loop process
+    (when-let [stop-recv-fn! (:stop-recv-fn component)]
+      (stop-recv-fn!))
+
+    (assoc component
+      :recv-ch nil
+      :send-fn nil
+      :ajax-post-fn nil
+      :ws-handshake-fn nil
+      :client-uuids nil
+      :stop-recv-fn nil)))
 
 (defn new-ws-handler []
   (map->WSHandler {}))

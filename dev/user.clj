@@ -12,16 +12,15 @@
              [webjars :refer :all]
              [defaults :refer :all])
             (cljat-webapp.components
-             [http-kit :refer [new-web-server]]
-             ;;[jetty :refer [new-web-server]]
-             [handler :refer [new-handler]]
-             [middleware :refer [new-middleware]]
-             [endpoint :refer [new-endpoint]]
-             [redis :refer [new-redis]]
-             [ws-handler :refer [new-ws-handler]]
-             [msg-router :refer [new-msg-router]]
-             [msg-echo :refer [new-msg-echo]])
+              [http-kit :refer [new-web-server]]
+              [db :refer [new-db]]
+              [endpoint :refer [new-endpoint]]
+              [redis :refer [new-redis]]
+              [ws-handler :refer [new-ws-handler]]
+              [msg-router :refer [new-msg-router]]
+              [msg-echo :refer [new-msg-echo]])
             [cljat-webapp.app-routes :refer [new-app-routes]]
+            [cljat-webapp.model :as m]
             [clj-http.client :as http]
             [figwheel-sidecar.repl-api :refer :all]
             [taoensso.sente :as sente]
@@ -35,7 +34,16 @@
          :port (env :web-port)
          :join? (if (= (env :cljat-env) "development") false true)}
    :redis {:host (env :redis-host)
-           :port (env :redis-port)}})
+           :port (env :redis-port)}
+   :db {:db-subprotocol "h2"
+        :db-subname "tcp://localhost/"
+        :db-store "db/cljat"
+        :db-driver "org.h2.Driver"
+        :db-user "sa"
+        :db-password ""}
+   :auth {:private-key "auth_privkey.pem"
+          :public-key "auth_pubkey.pem"
+          :passphrase "secretpassphrase"}})
 
 (defn dev-system
   [sys-config]
@@ -52,6 +60,9 @@
        ;; Redis client
        ;; :redis (new-redis (:redis sys-config))
 
+       ;; Database
+       :db (new-db (:db sys-config))
+
        ;; A worker that handles the websocket messages to put them on an outgoing channel 
        :ws-handler (new-ws-handler)
 
@@ -63,7 +74,7 @@
        ;; :msg-echo (new-msg-echo)
 
        ;; Compojure route
-       :routes (new-endpoint new-app-routes)
+       :routes (new-endpoint (:auth sys-config) new-app-routes)
 
        ;; Ring handler 
        ;; :handler (new-handler)
@@ -76,7 +87,8 @@
         ;; :msg-router [:ws-router-ch :router-ws-ch :redis]
         ;; :msg-echo {:in-ch :ws-router-ch :out-ch :router-ws-ch}
         
-        :routes [:ws-handler]
+        :routes [:db :ws-handler]
+        
         ;; :handler [:middleware :routes]
         ;; :web-server [:handler]
         :web-server [:routes]
