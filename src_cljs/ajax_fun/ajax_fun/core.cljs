@@ -31,9 +31,19 @@
 (let [login-ch (listen (dom/getElement "ajax-btn") goog.events.EventType.CLICK)]
   (go (while true
         (<! login-ch)
-        (POST "/doajax" {:params {:name "haha"}
-                        :handler handler
-                        :error-handler handler
-                        :format :json
-                        :response-format :json
-                        :keywords? true}))))
+        (POST "/ctx1/doajax" {:params {:name "haha"}
+                         :handler handler
+                         :error-handler handler
+                         :format :json
+                         :response-format :json
+                         :keywords? true}))))
+
+(let [login-ch (listen (dom/getElement "ajax-btn2") goog.events.EventType.CLICK)]
+  (go (while true
+        (<! login-ch)
+        (POST "/ctx2/doajax2" {:params {:name "haha"}
+                          :handler handler
+                          :error-handler handler
+                          :format :json
+                          :response-format :json
+                          :keywords? true}))))

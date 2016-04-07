@@ -21,7 +21,7 @@
 
   (stop [component]
     (log/info "Stopping Endpoint component ...")
-    (assoc component :privkey nil :pubkey nil :handler nil)))
+    (assoc component :privkey nil :pubkey nil :handler nil routes-fn nil)))
 
 (defn new-endpoint [auth-config routes-fn]
   (map->Endpoint {:auth-config auth-config :routes-fn routes-fn}))

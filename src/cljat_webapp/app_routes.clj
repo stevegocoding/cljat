@@ -12,7 +12,7 @@
       [keyword-params :refer :all]
       [params :refer :all]
       [resource :refer :all])
-    [ring.middleware.json :refer [wrap-json-body]]
+    [ring.middleware.json :refer :all]
     (compojure
       [core :refer [context routes GET POST ANY]]
       [route :as route])
@@ -80,12 +80,11 @@
         (GET "/" [] home-route)
         (GET "/login" [] (fn [req] (login-page req)))
         (POST "/login" req (fn [req]
-                                          (log/debug "haha " (body-string req))
-                                          
-                                          (log/debug "--- " req)
-                                          
-                                          #_(do-login (:params req) db privkey)
-                                          ))
+                             (log/debug "--- " req)
+                             (-> (response "Hello World")
+                               (content-type "text/plain"))
+                             #_(do-login (:params req) db privkey)
+                             ))
         (GET "/chat" [] chat-route)
         (GET "/ws" [] ws-handshake-fn)
         (route/not-found not-found-route))
@@ -95,10 +94,11 @@
       (wrap-defaults (assoc site-defaults :security false))
       ;;(wrap-keyword-params)
       ;;(wrap-params)
-      (wrap-json-body)
+      (wrap-json-params)
       (wrap-reload))))
 
 (defn new-app-routes [endpoint]
-  (routes
+  #_(site-routes endpoint)
+  #_(routes
     (api-routes endpoint)
     (site-routes endpoint)))

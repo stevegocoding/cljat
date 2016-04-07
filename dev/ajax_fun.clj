@@ -49,13 +49,14 @@
                   (hiccup/html
                     [:html
                      [:head
-                      (include-css "/assets/bootstrap/css/bootstrap.min.css")
+                      (include-css "/bootstrap/css/bootstrap.min.css")
                       ]
                      [:body
                       [:h1 {:class "title"} "Welcome to ajax fun"]
                       [:div
-                       (link-to {:id "ajax-btn" :class "btn btn-primary"} "/doajax" "do ajax post")]
-                      (include-js "js/ajax_fun/ajaxfun.js")]])
+                       (link-to {:id "ajax-btn" :class "btn btn-primary"} "/doajax" "do ajax post")
+                       (link-to {:id "ajax-btn2" :class "btn btn-primary"} "/doajax2" "do ajax post 2")]
+                      (include-js "/js/ajax_fun/ajaxfun.js")]])
                   (response))
     "text/html; charset=utf-8"))
 
@@ -65,19 +66,41 @@
     (content-type "text/plain")))
 
 (defn new-app-routes [{:as endpoint}]
-  (->
-    (routes
-      (GET "/ajaxfun" req (ajaxfun-page req))
-      (POST "/doajax" req (fn [req] (do-ajax req)))
-      (route/not-found not-found-route))
-    (wrap-stacktrace)
-    (wrap-webjars)
-    (wrap-resource "public")
-    (wrap-defaults (assoc site-defaults :security false))
-    ;;(wrap-keyword-params)
-    ;;(wrap-params)
-    (wrap-json-params)
-    (wrap-reload)))
+  (routes
+    (route/resources "/")
+    (route/resources "/bootstrap/" {:root "META-INF/resources/webjars/bootstrap/3.3.6/"})
+    (context "/app" []
+      (->
+        (routes
+          (GET "/ajaxfun" req (ajaxfun-page req)))
+        (wrap-webjars)
+        (wrap-resource "public/")
+        ))
+    (context "/ctx1" []
+      (->
+        (routes 
+          (POST "/doajax" req (fn [req] (do-ajax req))))
+        (wrap-stacktrace)
+        (wrap-webjars)
+        (wrap-resource "public")
+        (wrap-defaults (assoc site-defaults :security false))
+        ;;(wrap-keyword-params)
+        ;;(wrap-params)
+        (wrap-json-body)
+        (wrap-reload)))
+    (context "/ctx2" []
+      (->
+        (routes 
+          (POST "/doajax2" req (fn [req] (do-ajax req))))
+        (wrap-stacktrace)
+        (wrap-webjars)
+        (wrap-resource "public")
+        ;;(wrap-defaults (assoc site-defaults :security false))
+        ;;(wrap-keyword-params)
+        ;;(wrap-params)
+        (wrap-json-params)
+        (wrap-reload)))
+    (route/not-found not-found-route)))
 
 (defn dev-system
   [sys-config]
