@@ -13,14 +13,14 @@
   {:user-id Long
    :token String})
 
-(defn- check-user-creds [db email password]
+(defn check-user-creds [db email password]
   (let [user (m/find-user-by-email db email)]
     (if user
       (if (hs/check password (:password user))
         (dissoc user :password)
         nil))))
 
-(defn- sign-token [claims pkey]
+(defn sign-token [claims pkey]
   (let [exp (t/plus (t/now) (t/days 1))]
     (jws/sign (assoc claims :exp exp) pkey {:alg :rs256})))
 
@@ -53,9 +53,10 @@
     (context "/api" []
       :tags ["api"]
       
-      (GET "/hello" []
+      (GET "/hello" req
         :return {:message String}
         :query-params [name :- String]
+        (log/debug "hello -- " req)
         (ok {:message (str "Hello, " name)}))
 
       (POST "/auth-token" req

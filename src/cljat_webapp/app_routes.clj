@@ -3,18 +3,25 @@
     [clojure.core.async :refer [<! >! put! take! close! thread go go-loop]]
     [clojure.tools.logging :as log]
     [ring.util.response :refer [response content-type not-found]]
+    [ring.util.request :refer [body-string]]
     (ring.middleware
       [reload :refer :all]
       [stacktrace :refer :all]
       [webjars :refer :all]
-      [defaults :refer :all])
+      [defaults :refer :all]
+      [keyword-params :refer :all]
+      [params :refer :all]
+      [resource :refer :all])
+    [ring.middleware.json :refer [wrap-json-body]]
     (compojure
       [core :refer [context routes GET POST ANY]]
       [route :as route])
     [clj-http.client :as http]
     [selmer.parser :as parser]
     [environ.core :refer [env]]
-    [cljat-webapp.api :refer [api-routes]]))
+    [cljat-webapp.api :refer [check-user-creds
+                              sign-token
+                              api-routes]]))
 
 ;; App Routes
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -39,34 +46,57 @@
       (response)
       (content-type "text/html; charset=utf-8"))))
 
-(defn login-route [req]
+(defn login-page [req]
   (let [params (template-params req {:title "cljat login"})]
     (->
       (parser/render-file "login.html" params)
       (response)
       (content-type "text/html; charset=utf-8"))))
 
-(defn do-login-route [req]
-  )
+(defn do-login[{:keys [email password] :as params} db privkey]
+  
+  (let [row (check-user-creds db email password)]
+    (log/debug params)
+    (log/debug "email: " email " password: " password)
+    (if row
+      (let [token (sign-token row privkey)]
+        {:status 200
+         :headers {}
+         :body {:message "ok"
+                :data {:redirect "/chat"}}
+         :cookies {"cljat_token" {:value token}}})
+      {:status 401
+       :headers {}
+       :body {:message "Invalid email or password"
+              :data {}}})))
 
 (defn not-found-route [req]
   (not-found "cljat 404"))
 
-(defn site-routes [{:keys [ws-handler]}]
+(defn site-routes [{:keys [ws-handler db privkey]}]
   (let [ws-handshake-fn (:ws-handshake-fn ws-handler)]
-    (context "/site" []
-      (->
-        (routes
-          (GET "/" [] home-route)
-          (GET "/login" [] login-route)
-          (POST "/login" [] do-login-route)
-          (GET "/chat" [] chat-route)
-          (GET "/ws" [] ws-handshake-fn)
-          (route/not-found not-found-route))
-        (wrap-stacktrace)
-        (wrap-webjars)
-        (wrap-defaults site-defaults)
-        (wrap-reload)))))
+    (->
+      (routes
+        (GET "/" [] home-route)
+        (GET "/login" [] (fn [req] (login-page req)))
+        (POST "/login" req (fn [req]
+                                          (log/debug "haha " (body-string req))
+                                          
+                                          (log/debug "--- " req)
+                                          
+                                          #_(do-login (:params req) db privkey)
+                                          ))
+        (GET "/chat" [] chat-route)
+        (GET "/ws" [] ws-handshake-fn)
+        (route/not-found not-found-route))
+      (wrap-stacktrace)
+      (wrap-webjars)
+      ;;(wrap-resource "public")
+      (wrap-defaults (assoc site-defaults :security false))
+      ;;(wrap-keyword-params)
+      ;;(wrap-params)
+      (wrap-json-body)
+      (wrap-reload))))
 
 (defn new-app-routes [endpoint]
   (routes

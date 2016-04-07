@@ -3,7 +3,8 @@
   (:require [cljs.core.async :refer [<! >! chan timeout close! sliding-buffer take! put! alts!]]
             [reagent.core :as r]
             [cljsjs.react-bootstrap]
-            [taoensso.sente :as sente]))
+            [taoensso.sente :as sente]
+            [cljat-webapp.site]))
 
 (enable-console-print!)
 
@@ -348,10 +349,11 @@
 
 
 (defn mount-root []
-  (r/render-component
-   ;; [app]
-   [message-component]
-   (.getElementById js/document "app")))
+  (if-let [root-dom (.getElementById js/document "app")]
+    (r/render-component
+      ;; [app]
+      [message-component]
+      root-dom)))
 
 (defn fig-reload []
   (.log js/console "figwheel reloaded! ")

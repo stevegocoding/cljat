@@ -66,7 +66,8 @@
                  [org.webjars/font-awesome "4.5.0"]
                  [cljsjs/bootstrap "3.3.6-0"]
                  [cljsjs/react-bootstrap "0.28.1-1" :exclusions [org.webjars.bower/jquery]]
-                 [reagent "0.6.0-alpha"]]
+                 [reagent "0.6.0-alpha"]
+                 [cljs-ajax "0.5.4"]]
   
   :plugins [[lein-pprint "1.1.1"]
             [lein-ring "0.9.7"]
@@ -77,14 +78,23 @@
 
   ;; Clojurescript compiler configs
   :cljsbuild {:builds [{:id "dev"
-                        :source-paths ["src_cljs"]
+                        :source-paths ["src_cljs/cljat_webapp"]
                         :figwheel {:websocket-host "localhost"
                                    :on-jsload cljat-webapp.app/fig-reload}
-                        :compiler {
-                                   :main "cljat-webapp.app"
-                                   :asset-path "js/out"
-                                   :output-to "resources/public/js/app.js"
-                                   :output-dir "resources/public/js/out"
+                        :compiler {:main "cljat-webapp.app"
+                                   :asset-path "js/cljat_webapp/out"
+                                   :output-to "resources/public/js/cljat_webapp/app.js"
+                                   :output-dir "resources/public/js/cljat_webapp/out"
+                                   :optimizations :none
+                                   :pretty-print true}}
+                       {:id "ajaxfun-dev"
+                        :source-paths ["src_cljs/ajax_fun"]
+                        :figwheel {:websocket-host "localhost"
+                                   :on-jsload ajax-fun.core/fig-reload}
+                        :compiler {:main "ajax-fun.core"
+                                   :asset-path "js/ajax_fun/out"
+                                   :output-to "resources/public/js/ajax_fun/ajaxfun.js"
+                                   :output-dir "resources/public/js/ajax_fun/out/"
                                    :optimizations :none
                                    :pretty-print true}}]}
 

@@ -134,13 +134,6 @@
   (refresh :after 'user/go))
 
 
-(def h2-db {:classname "org.h2.Driver"
-            :subprotocol "h2"
-            :subname "~/tmp/cljat"
-            :user "sa"
-            :password ""})
-
-
 
 
 

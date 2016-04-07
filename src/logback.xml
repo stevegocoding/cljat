@@ -47,7 +47,11 @@
   <logger name="session-fun" level="DEBUG" additivity="false">
     <appender-ref ref="CONSOLE"/>
   </logger>
-  
+
+  <logger name="ajax-fun" level="DEBUG" additivity="false">
+    <appender-ref ref="CONSOLE"/>
+  </logger>
+
   <root level="INFO">
     <appender-ref ref="TIME_BASED_FILE"/>
   </root>
