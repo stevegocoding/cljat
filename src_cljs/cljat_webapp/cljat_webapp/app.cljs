@@ -361,7 +361,7 @@
 
 (defn ^:export run []
   (let [{:keys [chsk ch-recv send-fn state]}
-        (sente/make-channel-socket-client! "/ws" {:type :ws})]
+        (sente/make-channel-socket-client! "/app/ws" {:type :ws})]
     (send-msgs send-fn)
     (receive-msgs msgs ch-recv)
     (mount-root)))

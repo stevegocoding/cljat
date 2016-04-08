@@ -5,8 +5,7 @@
     <title>{{ title }}</title>
   </head>
   <body>
-      {% style
-      "/assets/bootstrap/css/bootstrap.min.css" %}
+      {% style "/bootstrap/css/bootstrap.min.css" %}
       {% style "/css/login.css" %}
       
       <div class="sitewrap">
@@ -14,9 +13,9 @@
 
           <div class="login-container">
               <h1>Login to Your Account</h1><br>
-				      <form>
-					        <input type="text" id="email-input" name="user" placeholder="Username">
-					        <input type="password" id="password-input" name="pass" placeholder="Password">
+				      <form id="login-form" action="/login-form" method="post">
+					        <input type="text" id="email-input" name="useremail" placeholder="Username">
+					        <input type="password" id="password-input" name="password" placeholder="Password">
 					        <input type="submit" id="login-btn" name="login" class="login" value="Login">
 				      </form>
 					    

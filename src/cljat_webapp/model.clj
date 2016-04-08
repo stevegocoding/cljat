@@ -3,7 +3,7 @@
 
 (defn find-user-by-email [db email]
   (sql/query (:conn db)
-    ["select u.user_id, u.email, u.nickname, u.password from users u where u.email = ?" email]
+    ["select u.user_id as uid, u.email, u.nickname, u.password from users u where u.email = ?" email]
     :result-set-fn first))
 
 (defn find-user-id-by-nickname [conn nickname]

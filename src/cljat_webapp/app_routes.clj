@@ -2,7 +2,7 @@
   (:require
     [clojure.core.async :refer [<! >! put! take! close! thread go go-loop]]
     [clojure.tools.logging :as log]
-    [ring.util.response :refer [response content-type not-found]]
+    [ring.util.response :refer [status response content-type not-found redirect set-cookie]]
     [ring.util.request :refer [body-string]]
     (ring.middleware
       [reload :refer :all]
@@ -14,14 +14,14 @@
       [resource :refer :all])
     [ring.middleware.json :refer :all]
     (compojure
-      [core :refer [context routes GET POST ANY]]
+      [core :refer [context routes GET POST ANY wrap-routes]]
       [route :as route])
     [clj-http.client :as http]
     [selmer.parser :as parser]
     [environ.core :refer [env]]
-    [cljat-webapp.api :refer [check-user-creds
-                              sign-token
-                              api-routes]]))
+    [cljat-webapp.auth :refer [check-user-creds sign-token unsign-token]]
+    [cljat-webapp.middlewares :refer [wrap-authentication wrap-auth-token-cookie]]
+    [cljat-webapp.api :refer [api-routes]]))
 
 ;; App Routes
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -54,51 +54,74 @@
       (content-type "text/html; charset=utf-8"))))
 
 (defn do-login[{:keys [email password] :as params} db privkey]
-  
   (let [row (check-user-creds db email password)]
     (log/debug params)
     (log/debug "email: " email " password: " password)
     (if row
       (let [token (sign-token row privkey)]
-        {:status 200
-         :headers {}
-         :body {:message "ok"
-                :data {:redirect "/chat"}}
-         :cookies {"cljat_token" {:value token}}})
-      {:status 401
-       :headers {}
-       :body {:message "Invalid email or password"
-              :data {}}})))
+        (->
+          (response {:message "ok" :data {:redirect "/app/chat"}})
+          (status 200)
+          (content-type "application/json; charset=utf-8")
+          (set-cookie "cljat-token" token)))
+      (->
+          (response {:message "Invalid email or password"})
+          (status 401)
+          (content-type "application/json; charset=utf-8")))))
 
 (defn not-found-route [req]
   (not-found "cljat 404"))
 
-(defn site-routes [{:keys [ws-handler db privkey]}]
+(defn app-routes [{:keys [ws-handler db privkey pubkey]}]
   (let [ws-handshake-fn (:ws-handshake-fn ws-handler)]
     (->
       (routes
-        (GET "/" [] home-route)
-        (GET "/login" [] (fn [req] (login-page req)))
-        (POST "/login" req (fn [req]
-                             (log/debug "--- " req)
-                             (-> (response "Hello World")
-                               (content-type "text/plain"))
-                             #_(do-login (:params req) db privkey)
-                             ))
         (GET "/chat" [] chat-route)
-        (GET "/ws" [] ws-handshake-fn)
-        (route/not-found not-found-route))
+        (GET "/ws" [] ws-handshake-fn))
       (wrap-stacktrace)
       (wrap-webjars)
       ;;(wrap-resource "public")
+      (wrap-authentication)
+      (wrap-auth-token-cookie pubkey)
       (wrap-defaults (assoc site-defaults :security false))
       ;;(wrap-keyword-params)
       ;;(wrap-params)
       (wrap-json-params)
+      (wrap-json-response)
       (wrap-reload))))
 
+(defn site-routes [{:keys [ws-handler db privkey pubkey]}]
+  (let [wrap-site (fn [handler]
+                    (-> handler
+                      (wrap-stacktrace)
+                      (wrap-webjars)
+                      (wrap-defaults (assoc site-defaults :security false))
+                      (wrap-json-response)
+                      (wrap-json-params)
+                      (wrap-reload)))]
+    (->
+      (routes
+        (GET "/" [] home-route)
+        (GET "/login" req (fn [req]
+                            (do 
+                              (log/debug "--- " req)
+                              (login-page req))))
+        (POST "/login" req (fn [req]
+                             (log/debug "--- " req)
+                             #_(-> (response "Hello World")
+                                 (content-type "text/plain"))
+                             (do-login (:params req) db privkey)))
+        (POST "/login-form" req (fn [req]
+                                  (redirect "app/chat"))))
+      (wrap-routes wrap-site))))
+
 (defn new-app-routes [endpoint]
-  #_(site-routes endpoint)
-  #_(routes
-    (api-routes endpoint)
-    (site-routes endpoint)))
+  (routes
+    (route/resources "/")
+    (route/resources "/bootstrap/" {:root "META-INF/resources/webjars/bootstrap/3.3.6/"})
+    (site-routes endpoint)
+    (context "/api" []
+      (api-routes endpoint))
+    (context "/app" []
+      (app-routes endpoint))
+    (route/not-found not-found-route)))

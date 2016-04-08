@@ -20,6 +20,7 @@
               [msg-router :refer [new-msg-router]]
               [msg-echo :refer [new-msg-echo]])
             [cljat-webapp.app-routes :refer [new-app-routes]]
+            [cljat-webapp.auth :refer :all]
             [cljat-webapp.model :as m]
             [clj-http.client :as http]
             [figwheel-sidecar.repl-api :refer :all]

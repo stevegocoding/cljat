@@ -42,8 +42,8 @@
   (go (while true
         (<! login-ch)
         (POST "/ctx2/doajax2" {:params {:name "haha"}
-                          :handler handler
-                          :error-handler handler
-                          :format :json
-                          :response-format :json
-                          :keywords? true}))))
+                               :handler handler
+                               :error-handler handler
+                               :format :json
+                               :response-format :json
+                               :keywords? true}))))

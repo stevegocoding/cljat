@@ -2,7 +2,8 @@
   (:require [clojure.java.io :as io]
             [clojure.tools.logging :as log]
             [com.stuartsierra.component :as component]
-            [buddy.core.keys :as keys]))
+            [buddy.core.keys :as keys]
+            [buddy.auth.backends.token :refer [jws-backend]]))
 
 (defrecord Endpoint [auth-config routes-fn]
   component/Lifecycle
@@ -17,7 +18,13 @@
                    (:public-key auth-config)
                    (io/resource)
                    (keys/public-key))]
-      (assoc component :handler (routes-fn (assoc component :privkey privkey :pubkey pubkey)))))
+      (let [handler (routes-fn (assoc component
+                                 :privkey privkey
+                                 :pubkey pubkey))]
+        (assoc component
+          :handler handler
+          :privkey privkey
+          :pubkey pubkey))))
 
   (stop [component]
     (log/info "Stopping Endpoint component ...")
