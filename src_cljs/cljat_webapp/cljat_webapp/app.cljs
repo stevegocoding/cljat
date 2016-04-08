@@ -4,6 +4,7 @@
             [reagent.core :as r]
             [cljsjs.react-bootstrap]
             [taoensso.sente :as sente]
+            [ajax.core :refer [GET POST]]
             [cljat-webapp.site]))
 
 (enable-console-print!)
@@ -80,8 +81,27 @@
                                           :nav {:id "chat-tab"
                                                 :icon "glyphicon-comment"}}}))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; New Stats
 
-(def sidebar-tab-stats (r/atom {:active :chat
+(def user-info {r/atom {:id 999
+                        :nickname "Steve.Shi"
+                        :email "steve.shi@gmail.com"}})
+
+(def friends-info (r/atom [{:id 1
+                            :nickname "Funny.Liang"
+                            :email "funny.liang@gmail.com"}
+                           {:id 2
+                            :nickname "Funny.Liang"
+                            :email "funny.liang@gmail.com"}
+                           {:id 3
+                            :nickname "Funny.Liang"
+                            :email "funny.liang@gmail.com"}
+                           {:id 4
+                            :nickname "Funny.Liang"
+                            :email "funny.liang@gmail.com"}]))
+
+(def sidebar-tab-stats (r/atom {:active :friends
                                 :friends {}
                                 :chat {}}))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -234,48 +254,86 @@
     [:div {:id "header-container"}
      [:nav {:class "navbar navbar-default"}]]))
 
-(defn sidebar-friends-pane [tab-stats]
-  (fn []
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn ajax-chan [ajax-fn url {:as params}]
+  (let [out (chan)]
+    (ajax-fn url {:params params
+                  :handler (fn [resp] (put! out resp))
+                  :error-handler (fn [resp] (put! out resp))
+                  :format :json
+                  :response-format :json})
+    out))
+
+(defn friend-list-item [friend]
+  [:a {:class "friend-item list-group-item"}
+   [:div {:class "friend-avatar"}
+    [:img {:class "img-avatar pull-left" :src "http://bootdey.com/img/Content/avatar/avatar2.png"}]]
+   [:div {:class "friend-item-body media-body"}
+    [:small {:class "list-group-item-heading"} (:nickname friend)]
+    [:div
+     [:small {:class "list-group-item-text c-gray"} (:email friend)]]]])
+
+(defn friends-list [friends]
+  (fn [friends]
+    [:div {:class "friends-list list-group"}
+     (for [friend friends]
+       ^{:key (:id friend)} [friend-list-item friend])]))
+
+
+(defn sidebar-friends-pane [sidebar-stats]
+  #_(let [will-update-fn (fn [this new-argv]
+                         (ajax-chan GET "/friendlist"))]
+    (r/create-class
+      {:component-will-update will-update-fn
+       }
+      ))
+  (fn [sidebar-stats]
     [:div {:id "sidebar-pane" :class "pane"}
-      [:div {:id "sidebar-header" :class "header"}
-        [:div {:class "title"} "Friends Header"]]
-      [:div {:class "title"} "Friends Panel"]])
+     [:div {:class "title"} "Friends Panel"
+      [friends-list @friends-info]]])
   )
 
-(defn sidebar-threads-pane [tab-stats]
-  (fn []
+(defn sidebar-threads-pane [sidebar-stats]
+  (fn [sidebar-stats]
     [:div {:id "sidebar-pane" :class "pane"}
-      [:div {:id "sidebar-header" :class "header"}
-        [:div {:class "title"} "Threads Header"]]
       [:div {:class "title"} "Threads Panel"]])
   )
 
-(defn sidebar-pane [tab-stats]
-  (fn [tab-stats]
-    (if (= (:active tab-stats) :friends)
-      [sidebar-friends-pane (:friends tab-stats)]
-      [sidebar-threads-pane (:chat tab-stats)])))
+(defn sidebar-header [sidebar-stats]
+  [:div {:id "sidebar-header" :class "header"}
+   [:div {:class "title"}
+    (if (= (:active sidebar-stats) :friends)
+      "Friends Header"
+      "Threads Header")]]  )
 
-(defn sidebar-tabs [tabs-stats]
+(defn sidebar-pane [sidebar-stats]
   (fn [tab-stats]
-    [:div {:id "sidebar-tabs" :class "tabs"}
+    (if (= (:active sidebar-stats) :friends)
+      [sidebar-friends-pane sidebar-stats]
+      [sidebar-threads-pane sidebar-stats])))
+
+(defn sidebar-tabs [sidebar-stats]
+  (fn [sidebar-stats]
+    [:div {:id "sidebar-tabs" :class "bottom-tabs"}
       [:div {:class "title"} "Tabs"]]))
 
-(defn sidebar [tab-stats]
+(defn sidebar [sidebar-stats]
   (fn []
     [:div {:id "sidebar"}
-     [sidebar-pane tab-stats]
-     [sidebar-tabs tab-stats]]))
+     [sidebar-header sidebar-stats]
+     [sidebar-pane sidebar-stats]
+     [sidebar-tabs sidebar-stats]]))
 
 (defn chat []
   (fn []
     [:div {:id "chat"}
-      [:div {:id "chat-pane" :class "pane"}
-       [:div {:class "title"} "Chat Panel"]
-       [:div {:id "chat-header" :class "header"}
-        [:div {:class "title"} "Chat Header"]]]
-      [:div {:id "chat-input" :class "input-box"}
-       [:div {:class "title"} "Chat Input"]]]))
+     [:div {:id "chat-header" :class "header"}
+      [:div {:class "title"} "Chat Header"]]
+     [:div {:id "chat-pane" :class "pane"}
+      [:div {:class "title"} "Chat Panel"]]
+     [:div {:id "chat-input" :class "input-box"}
+      [:div {:class "title"} "Chat Input"]]]))
 
 (defn app []
   #_(fn []

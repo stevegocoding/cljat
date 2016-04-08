@@ -2,7 +2,7 @@
 #window[center-x] == ::window[center-x];
 #window[center-y] == ::window[center-y];
 
-#sidebar[width] == 350;
+#sidebar[width] == 325;
 #sidebar[top] == #window[top];
 #sidebar[left] == #window[left];
 #sidebar[right] == #chat[left];
@@ -18,7 +18,7 @@
 #sidebar-tabs[top] == #sidebar-pane[bottom];
 #sidebar-tabs[bottom] == #sidebar[bottom];
 
-#chat[width] == 550;
+#chat[width] == 575;
 #chat[left]   == #sidebar[right];
 #chat[right]  == #window[right];
 #chat[top]    == #window[top];

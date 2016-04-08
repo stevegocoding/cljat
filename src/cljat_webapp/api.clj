@@ -25,6 +25,8 @@
                           :payload {}
                           }})))
 
+(defn- get-friends-list-resp [db {:keys [user-id]}])
+
 
 (defn api-routes [{:keys [db privkey] :as endpoint-comp}]
   (api
@@ -46,4 +48,12 @@
                :payload AuthToken}
       :body-params [email :- String
                     password :- String]
-      (auth-token-response db privkey (:params req)))))
+      (auth-token-response db privkey (:params req)))
+
+    #_(GET "/friends" req
+      :return {:code (s/enum 200 201 400 401 500)
+               :message String
+               :payload FriendsList}
+      :query-params [user-id :- Long]
+      (log/debug "get friends list -- " req)
+      (get-friends-list-resp db (:params req)))))
