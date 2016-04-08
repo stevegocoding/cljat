@@ -5,6 +5,8 @@
     [ring.util.response :refer [status response content-type not-found redirect set-cookie]]
     [ring.util.request :refer [body-string]]
     (ring.middleware
+      [cookies :refer :all]
+      [session :refer :all]
       [reload :refer :all]
       [stacktrace :refer :all]
       [webjars :refer :all]
@@ -79,7 +81,6 @@
         (GET "/chat" [] chat-route)
         (GET "/ws" [] ws-handshake-fn))
       (wrap-stacktrace)
-      (wrap-webjars)
       ;;(wrap-resource "public")
       (wrap-authentication)
       (wrap-auth-token-cookie pubkey)
@@ -94,8 +95,10 @@
   (let [wrap-site (fn [handler]
                     (-> handler
                       (wrap-stacktrace)
-                      (wrap-webjars)
-                      (wrap-defaults (assoc site-defaults :security false))
+                      ;;(wrap-session)
+                      ;;(wrap-defaults (assoc site-defaults :security false))
+                      (wrap-cookies)
+                      (wrap-keyword-params)
                       (wrap-json-response)
                       (wrap-json-params)
                       (wrap-reload)))]
@@ -104,7 +107,7 @@
         (GET "/" [] home-route)
         (GET "/login" req (fn [req]
                             (do 
-                              (log/debug "--- " req)
+                              (log/debug "login --- " req)
                               (login-page req))))
         (POST "/login" req (fn [req]
                              (log/debug "--- " req)
