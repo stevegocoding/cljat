@@ -81,6 +81,9 @@
                                                 :icon "glyphicon-comment"}}}))
 
 
+(def sidebar-tab-stats (r/atom {:active :chat
+                                :friends {}
+                                :chat {}}))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Messages
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -231,12 +234,48 @@
     [:div {:id "header-container"}
      [:nav {:class "navbar navbar-default"}]]))
 
-
-(defn sidebar-friends-pane []
+(defn sidebar-friends-pane [tab-stats]
+  (fn []
+    [:div {:id "sidebar-pane" :class "pane"}
+      [:div {:id "sidebar-header" :class "header"}
+        [:div {:class "title"} "Friends Header"]]
+      [:div {:class "title"} "Friends Panel"]])
   )
 
-(defn sidebar-chat-pane []
+(defn sidebar-threads-pane [tab-stats]
+  (fn []
+    [:div {:id "sidebar-pane" :class "pane"}
+      [:div {:id "sidebar-header" :class "header"}
+        [:div {:class "title"} "Threads Header"]]
+      [:div {:class "title"} "Threads Panel"]])
   )
+
+(defn sidebar-pane [tab-stats]
+  (fn [tab-stats]
+    (if (= (:active tab-stats) :friends)
+      [sidebar-friends-pane (:friends tab-stats)]
+      [sidebar-threads-pane (:chat tab-stats)])))
+
+(defn sidebar-tabs [tabs-stats]
+  (fn [tab-stats]
+    [:div {:id "sidebar-tabs" :class "tabs"}
+      [:div {:class "title"} "Tabs"]]))
+
+(defn sidebar [tab-stats]
+  (fn []
+    [:div {:id "sidebar"}
+     [sidebar-pane tab-stats]
+     [sidebar-tabs tab-stats]]))
+
+(defn chat []
+  (fn []
+    [:div {:id "chat"}
+      [:div {:id "chat-pane" :class "pane"}
+       [:div {:class "title"} "Chat Panel"]
+       [:div {:id "chat-header" :class "header"}
+        [:div {:class "title"} "Chat Header"]]]
+      [:div {:id "chat-input" :class "input-box"}
+       [:div {:class "title"} "Chat Input"]]]))
 
 (defn app []
   #_(fn []
@@ -255,18 +294,8 @@
        ]]])
   (fn []
     [:div {:id "window"}
-     [:div {:id "sidebar"}
-      [:div {:id "sidebar-pane" :class "pane"}
-       [:div {:id "sidebar-header" :class "header"}
-        [:div {:class "title"} "Friends"]]]
-      [:div {:id "sidebar-tabs" :class "tabs"}
-       [:div {:class "title"} "Tabs"]]]
-     [:div {:id "chat"}
-      [:div {:id "chat-pane" :class "pane"}
-       [:div {:id "chat-header" :class "header"}
-        [:div {:class "title"} "Messages"]]]
-      [:div {:id "chat-input" :class "input-box"}
-       [:div {:class "title"} "Chat Input"]]]]))
+     [sidebar @sidebar-tab-stats]
+     [chat]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
