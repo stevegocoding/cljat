@@ -122,6 +122,7 @@
   (routes
     (route/resources "/")
     (route/resources "/bootstrap/" {:root "META-INF/resources/webjars/bootstrap/3.3.6/"})
+    (route/resources "/gss/" {:root "META-INF/resources/webjars/gss/2.0.0/dist/"})
     (site-routes endpoint)
     (context "/api" []
       (api-routes endpoint))

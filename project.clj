@@ -64,6 +64,7 @@
                  ;; Front-end stuff
                  [org.webjars/bootstrap "3.3.6"]
                  [org.webjars/font-awesome "4.5.0"]
+                 [org.webjars.bower/gss "2.0.0"]
                  [cljsjs/bootstrap "3.3.6-0"]
                  [cljsjs/react-bootstrap "0.28.1-1" :exclusions [org.webjars.bower/jquery]]
                  [reagent "0.6.0-alpha"]

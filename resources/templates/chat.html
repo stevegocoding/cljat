@@ -13,15 +13,19 @@
 
       <!-- Scripts and Styles  -->
       {% style "/bootstrap/css/bootstrap.min.css" %}
-
-      {% style "/css/home.css"  %}
+      {% style "/css/chat.css"  %}
+      <link href="/css/chat.gss" rel="stylesheet" type="text/gss"></link>
 
       {% if dev  %}
           {% script "/js/cljat_webapp/app.js" %}
       {% else %}
           {% script "/js/cjat_webapp/app.js" %}
       {% endif %}
+      {% script "/gss/gss.min.js" %}
 
+      <script type="text/javascript">
+       window.engine = new GSS(document);
+      </script>
       <!-- app entry point -->
       <script type="text/javascript">cljat_webapp.app.run()</script>
   </body>

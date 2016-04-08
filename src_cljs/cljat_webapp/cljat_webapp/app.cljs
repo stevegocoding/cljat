@@ -58,49 +58,7 @@
                       ))
 
 (def client-info (r/atom {:user-name "user-0"}))
-(def chat-channel-states (r/atom [{:id "u-a-b"
-                                   :members ["user-a", "user-b"]}
-                                  {:id "u-b-c"
-                                   :members ["user-b", "user-c"]}
-                                  {:id "u-b-c1"
-                                   :members ["user-b", "user-c"]}
-                                  {:id "u-b-c2"
-                                   :members ["user-b", "user-c"]}
-                                  {:id "u-b-c3"
-                                   :members ["user-b", "user-c"]}
-                                  {:id "u-b-c4"
-                                   :members ["user-b", "user-c"]}
-                                  {:id "u-b-c5"
-                                   :members ["user-b", "user-c"]}
-                                  {:id "u-b-c6"
-                                   :members ["user-b", "user-c"]}
-                                  {:id "u-b-c7"
-                                   :members ["user-b", "user-c"]}
-                                  {:id "u-b-c8"
-                                   :members ["user-b", "user-c"]}
-                                  {:id "u-b-c9"
-                                   :members ["user-b", "user-c"]}
-                                  {:id "u-b-c10"
-                                   :members ["user-b", "user-c"]}
-                                  {:id "u-b-c11"
-                                   :members ["user-b", "user-c"]}
-                                  {:id "u-b-c66"
-                                   :members ["user-b", "user-c"]}
-                                  {:id "u-b-c77"
-                                   :members ["user-b", "user-c"]}
-                                  {:id "u-b-c88"
-                                   :members ["user-b", "user-c"]}
-                                  {:id "u-b-c99"
-                                   :members ["user-b", "user-c"]}
-                                  {:id "u-b-c101"
-                                   :members ["user-b", "user-c"]}
-                                  {:id "u-b-c110"
-                                   :members ["user-b", "user-c"]}
-                                  {:id "u-b-c666"
-                                   :members ["user-b", "user-c"]}
-                                  {:id "u-b-c710"
-                                   :members ["user-b", "user-c"]}
-                                  {:id "u-b-c888"
+(def chat-channel-states (r/atom [{:id "u-b-c888"
                                    :members ["user-b", "user-c"]}
                                   {:id "u-b-c999"
                                    :members ["user-b", "user-c"]}
@@ -273,8 +231,15 @@
     [:div {:id "header-container"}
      [:nav {:class "navbar navbar-default"}]]))
 
+
+(defn sidebar-friends-pane []
+  )
+
+(defn sidebar-chat-pane []
+  )
+
 (defn app []
-  (fn []
+  #_(fn []
     [:div {:id "app-wrap" :class "wrap"} 
      [:div {:id "header-wrap" :class "wrap"}
       [row {:id "header-row"}
@@ -287,7 +252,21 @@
         [sidebar-container]]
        [col {:class "col" :md 8}
         [chat-container]]
-       ]]]))
+       ]]])
+  (fn []
+    [:div {:id "window"}
+     [:div {:id "sidebar"}
+      [:div {:id "sidebar-pane" :class "pane"}
+       [:div {:id "sidebar-header" :class "header"}
+        [:div {:class "title"} "Friends"]]]
+      [:div {:id "sidebar-tabs" :class "tabs"}
+       [:div {:class "title"} "Tabs"]]]
+     [:div {:id "chat"}
+      [:div {:id "chat-pane" :class "pane"}
+       [:div {:id "chat-header" :class "header"}
+        [:div {:class "title"} "Messages"]]]
+      [:div {:id "chat-input" :class "input-box"}
+       [:div {:class "title"} "Chat Input"]]]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -351,8 +330,8 @@
 (defn mount-root []
   (if-let [root-dom (.getElementById js/document "app")]
     (r/render-component
-      ;; [app]
-      [message-component]
+      [app]
+      ;;[message-component]
       root-dom)))
 
 (defn fig-reload []

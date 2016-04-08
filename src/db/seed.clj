@@ -47,12 +47,12 @@
 
 (defn seed-users []
   (let [conn (db-conn)]
-    (sql/insert! conn :users (new-user "steve.shi@cljatdemo.com" "steve" "secret"))
-    (sql/insert! conn :users (new-user "erika.liang@cljatdemo.com" "erika" "secret"))
-    (sql/insert! conn :users (new-user "funny.liang@cljatdemo.com" "funny" "secret"))
-    (sql/insert! conn :users (new-user "coco.huang@cljatdemo.com" "coco" "secret"))
-    (sql/insert! conn :users (new-user "yoshi@cljatdemo.com" "yoshi" "secret"))
-    (sql/insert! conn :users (new-user "woody@cljatdemo.com" "woody" "secret"))))
+    (sql/insert! conn :users (new-user "steve.shi@gmail.com" "steve" "secret"))
+    (sql/insert! conn :users (new-user "erika.liang@gmail.com" "erika" "secret"))
+    (sql/insert! conn :users (new-user "funny.liang@gmail.com" "funny" "secret"))
+    (sql/insert! conn :users (new-user "coco.huang@gmail.com" "coco" "secret"))
+    (sql/insert! conn :users (new-user "yoshi@gmail.com" "yoshi" "secret"))
+    (sql/insert! conn :users (new-user "woody@gmail.com" "woody" "secret"))))
 
 (defn seed-friendships []
   (let [conn (db-conn)]

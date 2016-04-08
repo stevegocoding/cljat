@@ -1,0 +1,36 @@
+#window[height] == ::window[height] - 40;
+#window[center-x] == ::window[center-x];
+#window[center-y] == ::window[center-y];
+
+#sidebar[width] == 350;
+#sidebar[top] == #window[top];
+#sidebar[left] == #window[left];
+#sidebar[right] == #chat[left];
+#sidebar[bottom] == #window[bottom];
+
+#sidebar-pane[right] == #sidebar[right];
+#sidebar-pane[left] == #sidebar[left];
+#sidebar-pane[top] == #sidebar[top];
+#sidebar-pane[bottom] == #sidebar-tabs[top];
+
+#sidebar-tabs[height] == 50;
+#sidebar-tabs[width] == #sidebar[width];
+#sidebar-tabs[top] == #sidebar-pane[bottom];
+#sidebar-tabs[bottom] == #sidebar[bottom];
+
+#chat[width] == 550;
+#chat[left]   == #sidebar[right];
+#chat[right]  == #window[right];
+#chat[top]    == #window[top];
+#chat[bottom] == #window[bottom];
+
+#chat-pane[right] == #chat[right];
+#chat-pane[left] == #chat[left];
+#chat-pane[top] == #chat[top];
+#chat-pane[bottom] == #chat-input[top];
+
+#chat-input[height] == 50;
+#chat-input[top] == #chat-pane[bottom];
+#chat-input[width] == #chat[width];
+#chat-input[bottom] == #chat[bottom];
+
