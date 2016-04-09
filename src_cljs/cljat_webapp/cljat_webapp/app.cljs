@@ -5,7 +5,8 @@
             [cljsjs.react-bootstrap]
             [taoensso.sente :as sente]
             [ajax.core :refer [GET POST]]
-            [cljat-webapp.site]))
+            [cljat-webapp.site]
+            [cljat-webapp.comm :refer [init-ws!]]))
 
 (enable-console-print!)
 
@@ -373,7 +374,11 @@
      [:div {:id "chat-pane" :class "pane"}
       [:div {:class "title"} "Chat Panel"]]
      [:div {:id "chat-input" :class "input-box"}
-      [:div {:class "title"} "Chat Input"]]]))
+      [:textarea {:id "msg-input" :placeholder "Write Message ..."}]
+      [:span [:input {:id "send-btn" :type "submit" :value "send"}]]]]))
+
+(defn message-handler [ev-msg]
+  (js/console.log "msg: " ev-msg))
 
 (defn app []
   #_(fn []
@@ -390,22 +395,37 @@
        [col {:class "col" :md 8}
         [chat-container]]
        ]]])
-  (fn []
-    [:div {:id "window"}
-     [sidebar @sidebar-tab-stats]
-     [chat]]))
+  (let [ch-out (chan)
+        {:keys [ch-in stop-ws]} (init-ws! "/app/ws" ch-out)
+        msg-handler (fn [{:keys [id [ev-id {:keys [data] :as ?data} :as event]] :as ev-msg} val] (js/console.log "id: " id " data: " (:data ?data) " event: " ev-id))]
+    (r/create-class
+      {:component-will-mount (fn [_]
+                               (js/console.log "app component -- will mount")
+                               (go-loop []
+                                 (let [val (<! ch-in)]
+                                   (js/console.log "client recv!")
+                                   (when-let [{:keys [id data event] :as ev-msg} val]
+                                     (msg-handler ev-msg)
+                                     (recur)))))
+       :component-did-mount (fn [_]
+                              (js/console.log "app component -- did  mount"))
+       :component-will-unmount (fn [_]
+                                 (js/console.log "app component -- will unmount")
+                                 (stop-ws))
+       :reagent-render (fn []
+                         [:div {:id "window"}
+                          [sidebar @sidebar-tab-stats]
+                          [chat]])})))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def msgs (r/atom [{}]))
-(def new-msg-ch (chan))
-(def stop-ch (chan))
 
 (defn add-message [msgs new-msg]
   ;; keep the most recent 10 messages
   (cons new-msg msgs))
 
-(defn receive-msgs [msgs recv-ch]
+#_(defn receive-msgs [msgs recv-ch]
   ;; get the message from the receiving channel, add it to messages atom
   (go-loop []
     (let [[val ch] (alts! [recv-ch stop-ch])]
@@ -414,11 +434,11 @@
         (swap! msgs add-message event)
         (recur)))))
 
-(defn send-msgs [send-fn]
+#_(defn send-msgs [send-fn]
   (go-loop []
     (when-let [msg (<! new-msg-ch)]
       (js/console.log "message sent!")
-      (send-fn [:cljat.webapp/hello-msg {:data msg}])
+      (send-fn [:cljat.webapp/hello- msg {:data msg}])
       (recur))))
 
 
@@ -448,7 +468,7 @@
           ^{:key msg} [:li (pr-str msg)])
         [:li "None yet"])]]))
 
-(defn message-component []
+#_(defn message-component []
   [:div
    [message-list msgs]
    [message-input new-msg-ch]])
@@ -466,8 +486,9 @@
   (mount-root))
 
 (defn ^:export run []
-  (let [{:keys [chsk ch-recv send-fn state]}
+  #_(let [{:keys [chsk ch-recv send-fn state]}
         (sente/make-channel-socket-client! "/app/ws" {:type :ws})]
     (send-msgs send-fn)
     (receive-msgs msgs ch-recv)
-    (mount-root)))
+    (mount-root))
+  (mount-root))

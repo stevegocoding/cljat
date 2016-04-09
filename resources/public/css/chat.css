@@ -46,7 +46,7 @@ html, textarea, button {
 
 body, html {
     background: url(/images/bg.jpg);
-    background-size: no-repeat;
+    background-size: cover;
     height: 100%;
     overflow-y: hidden;
 }
@@ -170,32 +170,39 @@ Sidebar Tabs
 
 *************************************************/
 
+#sidebar-tabs {
+    display: table;
+    margin: 0 auto;
+}
+
 .tabs {
     position: absolute;
     bottom: 0;
     width: 300px;
+    min-width: 100px;
+    height: 45px;
     float: none;
     list-style: none;
-    padding: 0;
-    margin-bottom: 7px;
-    /*margin: 75px auto; */
-    
+    padding-left: 0px;    
+    margin: 5px auto 5px auto;
+    text-align: center;
 }
 .tabs:after {
     content: '';
-    display: table;
     clear: both;
 }
 .tabs .tab-btn {
-    display: inline;
-    float: left;
     text-decoration: none;
     text-align: center;
     line-height: 2;
-    width: 48%;
+    float: left;
+    width: 138px;
     cursor: pointer;
     -webkit-transition: all 0.5s; /* Safari 3.1 to 6.0 */
     transition: all 0.5s;
+    background-size: 100px 30px;
+    margin-top: 7px;
+    margin-left: 7px;
 }
 
 .tabs .tab-btn a {
@@ -216,4 +223,58 @@ Sidebar Tabs
 .tabs .tab-btn a:hover {
     color: #db6b9a;
     background-color: #eee;
+
 }
+
+/*************************************************
+
+Messages Input
+
+*************************************************/
+
+#chat-input {
+    padding: 10px 20px 10px 20px;
+}
+
+#msg-input {
+    background: none;
+    border: none;
+    display: block;
+    width: 400px;
+    height: 30px;
+    font-size: 15px;
+    padding: 5px 40px 5px 5px;
+    resize: none;
+   
+    overflow: auto;
+    outline: none;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+}
+
+#send-btn {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    width: 70px;
+    height: 36px;
+    background: #e67e22;
+    color: #FFF;
+    font-size: 15px;
+    text-align: center;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    border: 0;
+    border-bottom: 1px solid #da751c;
+    cursor: pointer;
+    -webkit-box-shadow: inset 0 -2px #da751c;
+    box-shadow: inset 0 -2px #da751c;
+}
+#send-btn:active {
+    top: 11px;
+    outline: none;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+}
+
+#send-btn:focus {outline:0;}

@@ -9,16 +9,13 @@
   (log/info "Starting ws handler recv msg process ...")
   (let [stop-ch (chan)]
     (go-loop []
-      (log/info "recv loop ")
       (let [[val ch] (alts! [in-ch stop-ch])]
-        (log/info "alts val: " val)
-        (log/debug "alts is stop ch: " (= ch stop-ch))
         (when-not (= ch stop-ch)
           (let [{:keys [event] :as msg} val]
-            (log/info "ws-msg-recv-loop -- take a message from recv channel")
-            (log/info "msg: " event)
+            (log/debug "ws-msg-recv-loop -- take a message from recv channel")
+            (log/debug "msg: " event)
             (>! out-ch msg)
-            (log/info "ws-msg-recv-loop -- put a message onto outgoing channnel"))
+            (log/debug "ws-msg-recv-loop -- put a message onto outgoing channnel"))
          (recur))))
     
     (fn [] (put! stop-ch :stop))))
@@ -26,10 +23,9 @@
 (defn start-msg-echo-loop! [out-ch send-fn]
   (go-loop []
     (let [{:keys [client-id ?data] :as msg} (<! out-ch)]
-      (log/info "echo msg")
-      (do
-        (send-fn client-id [:cljat.webapp.server/echo {:data (str "echo" (:data ?data))}])
-        (recur)))))
+      (log/debug "echo msg: " msg)
+      (send-fn client-id [:cljat.webapp.server/echo {:data (str "echo" (:data ?data))}])
+      (recur))))
 
 
 (defrecord WSHandler [ws-router-ch router-ws-ch]
