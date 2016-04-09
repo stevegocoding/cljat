@@ -84,21 +84,45 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; New Stats
 
-(def user-info {r/atom {:id 999
+(def user-info {r/atom {:id 1
                         :nickname "Steve.Shi"
                         :email "steve.shi@gmail.com"}})
 
-(def friends-info (r/atom [{:id 1
+(def friends-info (r/atom [{:id 3
                             :nickname "Funny.Liang"
                             :email "funny.liang@gmail.com"}
                            {:id 2
-                            :nickname "Funny.Liang"
-                            :email "funny.liang@gmail.com"}
-                           {:id 3
-                            :nickname "Funny.Liang"
-                            :email "funny.liang@gmail.com"}
+                            :nickname "Erika.Liang"
+                            :email "erika.liang@gmail.com"}
                            {:id 4
-                            :nickname "Funny.Liang"
+                            :nickname "Coco.Huang"
+                            :email "coco.huang@gmail.com"}
+                           {:id 5
+                            :nickname "Yoshi"
+                            :email "funny.liang@gmail.com"}
+                           {:id 6
+                            :nickname "Woody"
+                            :email "funny.liang@gmail.com"}
+                           {:id 7
+                            :nickname "Woody"
+                            :email "funny.liang@gmail.com"}
+                           {:id 8
+                            :nickname "Woody"
+                            :email "funny.liang@gmail.com"}
+                           {:id 9
+                            :nickname "Woody"
+                            :email "funny.liang@gmail.com"}
+                           {:id 10
+                            :nickname "Woody"
+                            :email "funny.liang@gmail.com"}
+                           {:id 11
+                            :nickname "Woody"
+                            :email "funny.liang@gmail.com"}
+                           {:id 12
+                            :nickname "Woody"
+                            :email "funny.liang@gmail.com"}
+                           {:id 13
+                            :nickname "Woody"
                             :email "funny.liang@gmail.com"}]))
 
 (def sidebar-tab-stats (r/atom {:active :friends
@@ -265,10 +289,13 @@
                   :response-format :json})
     out))
 
+(defn friend-avatar [friend]
+  [:div {:class "friend-avatar"}
+    [:img {:class "img-avatar pull-left" :src "http://bootdey.com/img/Content/avatar/avatar2.png"}]])
+
 (defn friend-list-item [friend]
   [:a {:class "friend-item list-group-item"}
-   [:div {:class "friend-avatar"}
-    [:img {:class "img-avatar pull-left" :src "http://bootdey.com/img/Content/avatar/avatar2.png"}]]
+   [friend-avatar friend]
    [:div {:class "friend-item-body media-body"}
     [:small {:class "list-group-item-heading"} (:nickname friend)]
     [:div
@@ -290,7 +317,7 @@
       ))
   (fn [sidebar-stats]
     [:div {:id "sidebar-pane" :class "pane"}
-     [:div {:class "title"} "Friends Panel"
+     [:div {:class "title"}
       [friends-list @friends-info]]])
   )
 
@@ -315,8 +342,16 @@
 
 (defn sidebar-tabs [sidebar-stats]
   (fn [sidebar-stats]
-    [:div {:id "sidebar-tabs" :class "bottom-tabs"}
-      [:div {:class "title"} "Tabs"]]))
+    (let [props-li (fn [id]
+                     (if (= (:active sidebar-stats) id)
+                       {:id (str id) :class "tab-btn active"}
+                       {:id (str id) :class "tab-btn"}))]
+      [:div {:id "sidebar-tabs" :class "bottom-tabs"}
+       [:ul {:class "tabs"}
+        [:li (props-li :friends)
+         [:a "FRIENDS"]]
+        [:li (props-li :chat)
+         [:a "CHAT"]]]])))
 
 (defn sidebar [sidebar-stats]
   (fn []
