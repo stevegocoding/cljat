@@ -336,12 +336,12 @@
       [:div {:class "title"} "Threads Panel"]])
   )
 
-(defn sidebar-header [user sidebar-stats]
+(defn sidebar-header [user]
   [:div {:id "sidebar-header" :class "header"}
    [user-profile user]])
 
 (defn sidebar-pane [sidebar-stats]
-  (fn [tab-stats]
+  (fn [sidebar-stats]
     (if (= (:active sidebar-stats) :friends)
       [sidebar-friends-pane sidebar-stats]
       [sidebar-threads-pane sidebar-stats])))
@@ -351,20 +351,23 @@
     (let [props-li (fn [id]
                      (if (= (:active sidebar-stats) id)
                        {:id (str id) :class "tab-btn active"}
-                       {:id (str id) :class "tab-btn"}))]
+                       {:id (str id) :class "tab-btn"}))
+          props-a (fn [name]
+                    {:on-click (fn [_]
+                                 (reset! sidebar-tab-stats (update sidebar-stats :active (constantly name))))})]
       [:div {:id "sidebar-tabs" :class "bottom-tabs"}
        [:ul {:class "tabs"}
         [:li (props-li :friends)
-         [:a "FRIENDS"]]
+         [:a (props-a :friends) "FRIENDS"]]
         [:li (props-li :chat)
-         [:a "CHAT"]]]])))
+         [:a (props-a :chat) "CHAT"]]]])))
 
-(defn sidebar [sidebar-stats]
-  (fn [sidebar-stats]
+(defn sidebar []
+  (fn []
     [:div {:id "sidebar"}
-     [sidebar-header @user-info sidebar-stats]
-     [sidebar-pane sidebar-stats]
-     [sidebar-tabs sidebar-stats]]))
+     [sidebar-header @user-info]
+     [sidebar-pane @sidebar-tab-stats]
+     [sidebar-tabs @sidebar-tab-stats]]))
 
 (defn chat []
   (fn []
@@ -397,7 +400,7 @@
        ]]])
   (let [ch-out (chan)
         {:keys [ch-in stop-ws]} (init-ws! "/app/ws" ch-out)
-        msg-handler (fn [{:keys [id [ev-id {:keys [data] :as ?data} :as event]] :as ev-msg} val] (js/console.log "id: " id " data: " (:data ?data) " event: " ev-id))]
+        msg-handler (fn [{:keys [id [ev-id {:keys [data] :as ?data} :as event]] :as ev-msg}] (js/console.log "id: " id " data: " (:data ?data) " event: " ev-id))]
     (r/create-class
       {:component-will-mount (fn [_]
                                (js/console.log "app component -- will mount")
@@ -414,7 +417,7 @@
                                  (stop-ws))
        :reagent-render (fn []
                          [:div {:id "window"}
-                          [sidebar @sidebar-tab-stats]
+                          [sidebar]
                           [chat]])})))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
