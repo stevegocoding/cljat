@@ -143,7 +143,7 @@ body, html {
     cursor: pointer;
 }
 
-.friend-item .img-avatar {
+.img-avatar {
     height: 37px;
     border-radius: 2px;
     width: 37px;
@@ -152,6 +152,15 @@ body, html {
 
 .list-group .list-group-item {
     border: 0;
+}
+
+.user-profile {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 55px;
+    background: #f8f8f8;
+    padding: 10px 20px 10px 75px;
 }
 
 

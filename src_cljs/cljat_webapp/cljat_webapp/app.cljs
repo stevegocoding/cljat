@@ -84,9 +84,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; New Stats
 
-(def user-info {r/atom {:id 1
+(def user-info (r/atom {:id 1
                         :nickname "Steve.Shi"
-                        :email "steve.shi@gmail.com"}})
+                        :email "steve.shi@gmail.com"}))
 
 (def friends-info (r/atom [{:id 3
                             :nickname "Funny.Liang"
@@ -289,13 +289,21 @@
                   :response-format :json})
     out))
 
-(defn friend-avatar [friend]
+(defn user-avatar [user]
   [:div {:class "friend-avatar"}
     [:img {:class "img-avatar pull-left" :src "http://bootdey.com/img/Content/avatar/avatar2.png"}]])
 
+(defn user-profile [user]
+  [:div {:class "user-profile"}
+   [user-avatar user]
+   [:div {:class ""}
+    [:small {:class ""} (:nickname user)]
+    [:div
+     [:small {:class ""} (:email user)]]]])
+
 (defn friend-list-item [friend]
   [:a {:class "friend-item list-group-item"}
-   [friend-avatar friend]
+   [user-avatar friend]
    [:div {:class "friend-item-body media-body"}
     [:small {:class "list-group-item-heading"} (:nickname friend)]
     [:div
@@ -327,12 +335,9 @@
       [:div {:class "title"} "Threads Panel"]])
   )
 
-(defn sidebar-header [sidebar-stats]
+(defn sidebar-header [user sidebar-stats]
   [:div {:id "sidebar-header" :class "header"}
-   [:div {:class "title"}
-    (if (= (:active sidebar-stats) :friends)
-      "Friends Header"
-      "Threads Header")]]  )
+   [user-profile user]])
 
 (defn sidebar-pane [sidebar-stats]
   (fn [tab-stats]
@@ -354,9 +359,9 @@
          [:a "CHAT"]]]])))
 
 (defn sidebar [sidebar-stats]
-  (fn []
+  (fn [sidebar-stats]
     [:div {:id "sidebar"}
-     [sidebar-header sidebar-stats]
+     [sidebar-header @user-info sidebar-stats]
      [sidebar-pane sidebar-stats]
      [sidebar-tabs sidebar-stats]]))
 
