@@ -85,7 +85,7 @@ body, html {
     width: 300px;
     margin-top: 65px;
     margin-bottom: 50px;
-    padding: 5px;
+    padding: 20px 5px 5px 5px;
     background-color: white;
     border-bottom: 1px solid #e8bad4;
 }
@@ -126,6 +126,7 @@ body, html {
     margin-bottom: 50px;
     padding: 5px;
     background-color: white;
+    border-bottom: 1px solid #e8bad4;
 }
 
 #chat-input {
@@ -137,8 +138,8 @@ body, html {
 	}
 
 .friend-item {
-    padding: 10px 20px 10px 60px;
-    height: 80px;
+    padding: 10px 20px 10px 70px;
+    height: 65px;
     cursor: pointer;
 }
 
@@ -200,10 +201,10 @@ Sidebar Tabs
 }
 
 .tabs .tab-btn.active a {
-    color: #3498db;
+    color: #db6b9a;
 }
 
 .tabs .tab-btn a:hover {
-    color: #3498db;;
+    color: #db6b9a;
     background-color: #eee;
 }
