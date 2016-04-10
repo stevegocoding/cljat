@@ -88,42 +88,11 @@
 
 (def user-info (r/atom {}))
 
-(def friends-info (r/atom [{:id 3
-                            :nickname "Funny.Liang"
-                            :email "funny.liang@gmail.com"}
-                           {:id 2
-                            :nickname "Erika.Liang"
-                            :email "erika.liang@gmail.com"}
-                           {:id 4
-                            :nickname "Coco.Huang"
-                            :email "coco.huang@gmail.com"}
-                           {:id 5
-                            :nickname "Yoshi"
-                            :email "funny.liang@gmail.com"}
-                           {:id 6
-                            :nickname "Woody"
-                            :email "funny.liang@gmail.com"}
-                           {:id 7
-                            :nickname "Woody"
-                            :email "funny.liang@gmail.com"}
-                           {:id 8
-                            :nickname "Woody"
-                            :email "funny.liang@gmail.com"}
-                           {:id 9
-                            :nickname "Woody"
-                            :email "funny.liang@gmail.com"}
-                           {:id 10
-                            :nickname "Woody"
-                            :email "funny.liang@gmail.com"}
-                           {:id 11
-                            :nickname "Woody"
-                            :email "funny.liang@gmail.com"}
-                           {:id 12
-                            :nickname "Woody"
-                            :email "funny.liang@gmail.com"}
-                           {:id 13
-                            :nickname "Woody"
-                            :email "funny.liang@gmail.com"}]))
+(def friends-info (r/atom []))
+
+(def threads-info (r/atom [{:tid 1
+                            :title "corgi group"
+                            :users [2 3]}]))
 
 (def sidebar-tab-stats (r/atom {:active :friends
                                 :friends {}
@@ -280,9 +249,22 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defn user-avatar-url-fake [user-id]
+  (str "/images/avatars/avatar" (inc (mod user-id 8)) ".png"))
+
 (defn user-avatar [user]
   [:div {:class "friend-avatar"}
-    [:img {:class "img-avatar pull-left" :src "http://bootdey.com/img/Content/avatar/avatar2.png"}]])
+   [:img {:class "img-avatar pull-left" :src (user-avatar-url-fake (:uid user))}]])
+
+(defn thread-avatar [thread]
+  (fn [thread]
+    (let [props-img (fn [thread]
+                      (let [img (if (-> (:users thread) (count) (> 1))
+                                  "/images/avatars/group.png"
+                                  (user-avatar-url-fake (first (:users thread))))]
+                        {:class "img-avatar pull-left" :src img}))]
+      [:div {:class "thread-avatar"}
+       [:img (props-img thread)]])))
 
 (defn user-profile [user]
   [:div {:class "user-profile"}
@@ -304,12 +286,31 @@
   (fn [friends]
     [:div {:class "friends-list list-group"}
      (for [friend friends]
-       ^{:key (:id friend)} [friend-list-item friend])]))
+       ^{:key (:uid friend)} [friend-list-item friend])]))
+
+(defn threads-list-item [thread]
+  [:a {:class "thread-item list-group-item"}
+   [thread-avatar thread]
+   [:div {:class "thread-item-body media-body"}
+    [:small {:class "list-group-item-heading"} (:title thread)]]])
+
+(defn threads-list [threads]
+  (fn [threads]
+    [:div {:class "threads-list list-group"}
+     (for [thread threads]
+       ^{:key (:tid thread)} [threads-list-item thread])]))
 
 
 (defn sidebar-friends-pane [sidebar-stats]
   (r/create-class
-    {:component-will-mount (fn [_] (js/console.log "sidebar friends pane -- will mount"))
+    {:component-will-mount (fn [_]
+                             (js/console.log "sidebar friends pane -- will mount")
+                             (go
+                               (let [resp (<! (ajax-chan GET "/app/friends-info" {:user-id (.-uid js/cljat)}))]
+                                 (reset! friends-info (->
+                                                        (js->clj resp)
+                                                        (walk/keywordize-keys)
+                                                        (get-in [:data]))))))
      :component-did-mount (fn [_] (js/console.log "sidebar friends pane -- did mount"))
      :reagent-render (fn [sidebar-stats]
                        [:div {:id "sidebar-pane" :class "pane"}
@@ -318,11 +319,19 @@
 
 (defn sidebar-threads-pane [sidebar-stats]
   (r/create-class
-    {:component-will-mount (fn [_] (js/console.log "sidebar threads pane -- will mount"))
+    {:component-will-mount (fn [_]
+                             (js/console.log "sidebar threads pane -- will mount")
+                             #_(go
+                               (let [resp (<! (ajax-chan GET "/app/threads-info" {:user-id (.-uid js/cljat)}))]
+                                 (reset! threads-info (->
+                                                        (js->clj resp)
+                                                        (walk/keywordize-keys)
+                                                        (get-in [:data]))))))
      :component-did-mount (fn [_] (js/console.log "sidebar threads pane -- did mount"))
      :reagent-render (fn [sidebar-stats]
                        [:div {:id "sidebar-pane" :class "pane"}
-                        [:div {:class "title"} "Threads Panel"]])}))
+                        [:div {:class "title"}
+                         [threads-list @threads-info]]])}))
 
 (defn sidebar-header [user]
   (r/create-class
@@ -360,15 +369,15 @@
                      (if (= (:active sidebar-stats) id)
                        {:id (name id) :class "tab-btn active"}
                        {:id (name id) :class "tab-btn"}))
-          props-a (fn [name]
+          props-a (fn [id]
                     {:on-click (fn [_]
-                                 (reset! sidebar-tab-stats (update sidebar-stats :active (constantly name))))})]
+                                 (reset! sidebar-tab-stats (update sidebar-stats :active (constantly id))))})]
       [:div {:id "sidebar-tabs" :class "bottom-tabs"}
        [:ul {:class "tabs"}
         [:li (props-li :friends)
          [:a (props-a :friends) "FRIENDS"]]
-        [:li (props-li :threds)
-         [:a (props-a :chat) "CHAT"]]]])))
+        [:li (props-li :threads)
+         [:a (props-a :threads) "CHAT"]]]])))
 
 (defn sidebar []
   (fn []

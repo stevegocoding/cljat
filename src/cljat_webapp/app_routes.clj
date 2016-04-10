@@ -38,9 +38,9 @@
 (defn chat-route [req]
   (let [params (template-params req {:home-title "cljat chat"})]
     (->
-     (parser/render-file "chat.html" params)
-     (response)
-     (content-type "text/html; charset=utf-8"))))
+      (parser/render-file "chat.html" (assoc params :user-id (:identity req)))
+      (response)
+      (content-type "text/html; charset=utf-8"))))
 
 (defn home-route [req]
   (let [params (template-params req {:title "cljat home"})]
@@ -83,6 +83,17 @@
       (status 404)
       (content-type "application/json; charset=utf-8"))))
 
+(defn get-user-friends-info [db user-id]
+  (if-let [friends (m/find-friends-by-user-id db user-id)]
+    (->
+      (response {:data friends})
+      (status 200)
+      (content-type "application/json; charset=utf-8"))
+    (->
+      (response {:message "User not found"})
+      (status 404)
+      (content-type "application/json; charset=utf-8"))))
+
 (defn not-found-route [req]
   (not-found "cljat 404"))
 
@@ -93,7 +104,9 @@
         (GET "/chat" [] chat-route)
         (GET "/ws" [] ws-handshake-fn)
         (GET "/user-info" req (fn [req]
-                                (get-user-info (:identity req) db))))
+                                (get-user-info (:identity req) db)))
+        (GET "/friends-info" req (fn [req]
+                              (get-user-friends-info db (get-in req [:params :user-id])))))
       (wrap-stacktrace)
       ;;(wrap-resource "public")
       (wrap-authentication)

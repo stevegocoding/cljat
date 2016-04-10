@@ -145,9 +145,9 @@ body, html {
 
 .img-avatar {
     height: 37px;
-    border-radius: 2px;
     width: 37px;
-    margin: 3px 0 0 -45px;
+    border-radius: 2px;
+    margin: 0 0 0 -45px;
 }
 
 .list-group .list-group-item {
@@ -162,6 +162,20 @@ body, html {
     background: #f8f8f8;
     padding: 10px 20px 10px 75px;
 }
+
+/*************************************************
+
+Threads Panel
+
+*************************************************/
+
+.thread-item {
+    padding: 10px 20px 10px 70px;
+    height: 65px;
+    cursor: pointer;
+}
+
+
 
 
 /*************************************************

@@ -30,11 +30,11 @@
                 email (.-value (dom/getElement "email-input"))
                 password (.-value (dom/getElement "password-input"))]
             (POST "/login" {:params {:email email
-                                         :password password}
-                                :handler (fn [resp]
-                                           (go (<! (timeout 1000))
-                                               (.submit form)))
-                                :error-handler handler
-                                :format :json
-                                :response-format :json
-                                :keywords? true}))))))
+                                     :password password}
+                            :handler (fn [resp]
+                                       (go (<! (timeout 1000))
+                                           (.submit form)))
+                            :error-handler handler
+                            :format :json
+                            :response-format :json
+                            :keywords? true}))))))
