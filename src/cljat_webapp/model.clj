@@ -6,6 +6,11 @@
     ["select u.user_id as uid, u.email, u.nickname, u.password from users u where u.email = ?" email]
     :result-set-fn first))
 
+(defn find-user-by-id [db id]
+  (sql/query (:conn db)
+    ["select u.user_id as uid, u.email, u.nickname from users u where u.user_id = ?" id]
+    :result-set-fn first))
+
 (defn find-friends-by-user-id [db user-id]
   (sql/query (:conn db)
     [(str "select fs.user_id as uid, fs.email, fs.nickname from users fs where fs.user_id in "

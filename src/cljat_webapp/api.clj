@@ -3,13 +3,30 @@
             [compojure.api.sweet :refer [api context GET POST]]
             [schema.core :as s]
             [ring.util.http-response :refer [ok created]]
+            (ring.middleware
+              [cookies :refer :all]
+              [session :refer :all]
+              [reload :refer :all]
+              [stacktrace :refer :all]
+              [webjars :refer :all]
+              [defaults :refer :all]
+              [keyword-params :refer :all]
+              [params :refer :all]
+              [resource :refer :all]
+              [json :refer :all])
             [clj-time.core :as t]
-            [cljat-webapp.auth :refer :all])
+            [cljat-webapp.auth :refer :all]
+            [cljat-webapp.model :as m])
   (:import java.lang.String))
 
 (s/defschema AuthToken
   {:user-id Long
    :token String})
+
+(s/defschema UserInfo
+  {:user-id Long
+   :email String
+   :nickname String})
 
 (defn- auth-token-response [db private-key {:keys [email password]}]
   (let [row (check-user-creds db email password)
@@ -27,8 +44,19 @@
 
 (defn- get-friends-list-resp [db {:keys [user-id]}])
 
+(defn- get-user-info-resp [db {:keys [user-id]}]
+  (if-let [user (m/find-user-by-id user-id)]
+    {:status 200
+     :body {:code 200
+            :payload {:user-id (:uid user)
+                      :email (:email user)
+                      :nickname (:nickname user)}}}
+    {:status 404
+     :body {:code 404
+            :message "User not found!"}}))
 
-(defn api-routes [{:keys [db privkey] :as endpoint-comp}]
+
+(defn api-routes [{:keys [db privkey pubkey] :as endpoint-comp}]
   (api
     {:swagger {:ui "/swagger-ui"
                :spec "/swagger.json"
@@ -50,10 +78,17 @@
                     password :- String]
       (auth-token-response db privkey (:params req)))
 
-    #_(GET "/friends" req
+    #_(GET "/user-info" req
       :return {:code (s/enum 200 201 400 401 500)
                :message String
-               :payload FriendsList}
-      :query-params [user-id :- Long]
-      (log/debug "get friends list -- " req)
-      (get-friends-list-resp db (:params req)))))
+               :payload UserInfo}
+      (get-user-info-resp db (:identity req)))
+
+    #_(GET "/friends" req
+        :return {:code (s/enum 200 201 400 401 500)
+                 :message String
+                 :payload FriendsList}
+        :query-params [user-id :- Long]
+        (log/debug "get friends list -- " req)
+        (get-friends-list-resp db (:params req))))
+  )

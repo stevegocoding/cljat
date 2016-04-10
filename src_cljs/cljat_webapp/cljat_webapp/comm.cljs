@@ -22,3 +22,12 @@
           (recur))))
     {:ch-in ch-in
      :stop-ws (fn [] (put! ch-stop :no-op))}))
+
+(defn ajax-chan [ajax-fn url {:as params}]
+  (let [out (chan)]
+    (ajax-fn url {:params params
+                  :handler (fn [resp] (put! out resp))
+                  :error-handler (fn [resp] (put! out resp))
+                  :format :json
+                  :response-format :json})
+    out))

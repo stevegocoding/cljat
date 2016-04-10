@@ -8,8 +8,6 @@
 
 (enable-console-print!)
 
-(js/console.log "hahaljlsakjdflakjsf")
-
 (defn listen [el type]
   (let [out (chan)]
     (events/listen el type

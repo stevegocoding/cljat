@@ -1,12 +1,13 @@
 (ns ^:figwheel-always cljat-webapp.app
   (:require-macros [cljs.core.async.macros :refer [go go-loop]])
-  (:require [cljs.core.async :refer [<! >! chan timeout close! sliding-buffer take! put! alts!]]
+  (:require [clojure.walk :as walk]
+            [cljs.core.async :refer [<! >! chan timeout close! sliding-buffer take! put! alts!]]
             [reagent.core :as r]
             [cljsjs.react-bootstrap]
             [taoensso.sente :as sente]
             [ajax.core :refer [GET POST]]
             [cljat-webapp.site]
-            [cljat-webapp.comm :refer [init-ws!]]))
+            [cljat-webapp.comm :refer [init-ws! ajax-chan]]))
 
 (enable-console-print!)
 
@@ -85,9 +86,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; New Stats
 
-(def user-info (r/atom {:id 1
-                        :nickname "Steve.Shi"
-                        :email "steve.shi@gmail.com"}))
+(def user-info (r/atom {}))
 
 (def friends-info (r/atom [{:id 3
                             :nickname "Funny.Liang"
@@ -128,7 +127,7 @@
 
 (def sidebar-tab-stats (r/atom {:active :friends
                                 :friends {}
-                                :chat {}}))
+                                :threads {}}))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Messages
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -281,15 +280,6 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn ajax-chan [ajax-fn url {:as params}]
-  (let [out (chan)]
-    (ajax-fn url {:params params
-                  :handler (fn [resp] (put! out resp))
-                  :error-handler (fn [resp] (put! out resp))
-                  :format :json
-                  :response-format :json})
-    out))
-
 (defn user-avatar [user]
   [:div {:class "friend-avatar"}
     [:img {:class "img-avatar pull-left" :src "http://bootdey.com/img/Content/avatar/avatar2.png"}]])
@@ -318,27 +308,45 @@
 
 
 (defn sidebar-friends-pane [sidebar-stats]
-  #_(let [will-update-fn (fn [this new-argv]
-                         (ajax-chan GET "/friendlist"))]
-    (r/create-class
-      {:component-will-update will-update-fn
-       }
-      ))
-  (fn [sidebar-stats]
-    [:div {:id "sidebar-pane" :class "pane"}
-     [:div {:class "title"}
-      [friends-list @friends-info]]])
-  )
+  (r/create-class
+    {:component-will-mount (fn [_] (js/console.log "sidebar friends pane -- will mount"))
+     :component-did-mount (fn [_] (js/console.log "sidebar friends pane -- did mount"))
+     :reagent-render (fn [sidebar-stats]
+                       [:div {:id "sidebar-pane" :class "pane"}
+                        [:div {:class "title"}
+                         [friends-list @friends-info]]])}))
 
 (defn sidebar-threads-pane [sidebar-stats]
-  (fn [sidebar-stats]
-    [:div {:id "sidebar-pane" :class "pane"}
-      [:div {:class "title"} "Threads Panel"]])
-  )
+  (r/create-class
+    {:component-will-mount (fn [_] (js/console.log "sidebar threads pane -- will mount"))
+     :component-did-mount (fn [_] (js/console.log "sidebar threads pane -- did mount"))
+     :reagent-render (fn [sidebar-stats]
+                       [:div {:id "sidebar-pane" :class "pane"}
+                        [:div {:class "title"} "Threads Panel"]])}))
 
 (defn sidebar-header [user]
-  [:div {:id "sidebar-header" :class "header"}
-   [user-profile user]])
+  (r/create-class
+    {:component-will-mount (fn [_]
+                             (do
+                               (js/console.log "sidebar header -- will mount")
+                               (go
+                                 (let [resp (<! (ajax-chan GET "/app/user-info" {}))]
+                                   #_(js/console.log "call /app/user-info ..."  (->
+                                                                                (js->clj resp)
+                                                                                (walk/keywordize-keys)
+                                                                                (get-in [:data :email])))
+                                   (reset! user-info (->
+                                                       (js->clj resp)
+                                                       (walk/keywordize-keys)
+                                                       (get-in [:data])))))))
+     :component-did-mount (fn [_]
+                            (js/console.log "sidebar header -- did mount"))
+     :component-will-update (fn [_]
+                              (js/console.log "sidebar header -- will update"))
+     :reagent-render (fn [user]
+                       (js/console.log "sidebar header -- render" user)
+                       [:div {:id "sidebar-header" :class "header"}
+                        [user-profile user]])}))
 
 (defn sidebar-pane [sidebar-stats]
   (fn [sidebar-stats]
@@ -350,8 +358,8 @@
   (fn [sidebar-stats]
     (let [props-li (fn [id]
                      (if (= (:active sidebar-stats) id)
-                       {:id (str id) :class "tab-btn active"}
-                       {:id (str id) :class "tab-btn"}))
+                       {:id (name id) :class "tab-btn active"}
+                       {:id (name id) :class "tab-btn"}))
           props-a (fn [name]
                     {:on-click (fn [_]
                                  (reset! sidebar-tab-stats (update sidebar-stats :active (constantly name))))})]
@@ -359,7 +367,7 @@
        [:ul {:class "tabs"}
         [:li (props-li :friends)
          [:a (props-a :friends) "FRIENDS"]]
-        [:li (props-li :chat)
+        [:li (props-li :threds)
          [:a (props-a :chat) "CHAT"]]]])))
 
 (defn sidebar []

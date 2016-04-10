@@ -1,29 +1,30 @@
 (ns cljat-webapp.app-routes
   (:require
-    [clojure.core.async :refer [<! >! put! take! close! thread go go-loop]]
-    [clojure.tools.logging :as log]
-    [ring.util.response :refer [status response content-type not-found redirect set-cookie]]
-    [ring.util.request :refer [body-string]]
-    (ring.middleware
-      [cookies :refer :all]
-      [session :refer :all]
-      [reload :refer :all]
-      [stacktrace :refer :all]
-      [webjars :refer :all]
-      [defaults :refer :all]
-      [keyword-params :refer :all]
-      [params :refer :all]
-      [resource :refer :all])
-    [ring.middleware.json :refer :all]
-    (compojure
-      [core :refer [context routes GET POST ANY wrap-routes]]
-      [route :as route])
-    [clj-http.client :as http]
-    [selmer.parser :as parser]
-    [environ.core :refer [env]]
-    [cljat-webapp.auth :refer [check-user-creds sign-token unsign-token]]
-    [cljat-webapp.middlewares :refer [wrap-authentication wrap-auth-token-cookie]]
-    [cljat-webapp.api :refer [api-routes]]))
+   [clojure.core.async :refer [<! >! put! take! close! thread go go-loop]]
+   [clojure.tools.logging :as log]
+   [ring.util.response :refer [status response content-type not-found redirect set-cookie]]
+   [ring.util.request :refer [body-string]]
+   (ring.middleware
+     [cookies :refer :all]
+     [session :refer :all]
+     [reload :refer :all]
+     [stacktrace :refer :all]
+     [webjars :refer :all]
+     [defaults :refer :all]
+     [keyword-params :refer :all]
+     [params :refer :all]
+     [resource :refer :all])
+   [ring.middleware.json :refer :all]
+   (compojure
+     [core :refer [context routes GET POST ANY wrap-routes]]
+     [route :as route])
+   [clj-http.client :as http]
+   [selmer.parser :as parser]
+   [environ.core :refer [env]]
+   [cljat-webapp.auth :refer [check-user-creds sign-token unsign-token]]
+   [cljat-webapp.middlewares :refer [wrap-authentication wrap-auth-token-cookie]]
+   [cljat-webapp.api :refer [api-routes]]
+   [cljat-webapp.model :as m]))
 
 ;; App Routes
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -71,6 +72,17 @@
           (status 401)
           (content-type "application/json; charset=utf-8")))))
 
+(defn get-user-info [user-id db]
+  (if-let [user (m/find-user-by-id db user-id)]
+    (->
+      (response {:data user})
+      (status 200)
+      (content-type "application/json; charset=utf-8"))
+    (->
+      (response {:message "User not found"})
+      (status 404)
+      (content-type "application/json; charset=utf-8"))))
+
 (defn not-found-route [req]
   (not-found "cljat 404"))
 
@@ -79,7 +91,9 @@
     (->
       (routes
         (GET "/chat" [] chat-route)
-        (GET "/ws" [] ws-handshake-fn))
+        (GET "/ws" [] ws-handshake-fn)
+        (GET "/user-info" req (fn [req]
+                                (get-user-info (:identity req) db))))
       (wrap-stacktrace)
       ;;(wrap-resource "public")
       (wrap-authentication)
