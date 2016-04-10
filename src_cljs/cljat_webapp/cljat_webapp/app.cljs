@@ -30,6 +30,77 @@
 (def sidebar-tab-stats (r/atom {:active :friends
                                 :friends {}
                                 :threads {}}))
+
+(def messages (r/atom [{:msg-id 0
+                        :sent-from 1
+                        :sent-time "xx-xx-xxxx"
+                        :msg-str "test msg test msg test msg hahhahaha"}
+                       {:msg-id 1
+                        :sent-from 3
+                        :sent-time "xx-xx-xxxx"
+                        :msg-str "test msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahaha"}
+                       {:msg-id 2
+                        :sent-from 1
+                        :sent-time "xx-xx-xxxx"
+                        :msg-str "test msg test msg test msg hahhahaha"}
+                       {:msg-id 3
+                        :sent-from 1
+                        :sent-time "xx-xx-xxxx"
+                        :msg-str "test msg test msg test msg hahhahaha"}
+                       {:msg-id 4
+                        :sent-from 1
+                        :sent-time "xx-xx-xxxx"
+                        :msg-str "test msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahaha"}
+                       {:msg-id 5
+                        :sent-from 3
+                        :sent-time "xx-xx-xxxx"
+                        :msg-str "test msg test msg test msg hahhahaha"}
+                       {:msg-id 6
+                        :sent-from 1
+                        :sent-time "xx-xx-xxxx"
+                        :msg-str "test msg test msg test msg hahhahaha"}
+                       {:msg-id 7
+                        :sent-from 1
+                        :sent-time "xx-xx-xxxx"
+                        :msg-str "test msg test msg test msg hahhahaha"}
+                       {:msg-id 8
+                        :sent-from 1
+                        :sent-time "xx-xx-xxxx"
+                        :msg-str "test msg test msg test msg hahhahaha"}
+                       {:msg-id 9
+                        :sent-from 3
+                        :sent-time "xx-xx-xxxx"
+                        :msg-str "test msg test msg test msg hahhahaha"}
+                       {:msg-id 11
+                        :sent-from 1
+                        :sent-time "xx-xx-xxxx"
+                        :msg-str "test msg test msg test msg hahhahaha"}
+                       {:msg-id 12
+                        :sent-from 1
+                        :sent-time "xx-xx-xxxx"
+                        :msg-str "test msg test msg test msg hahhahaha"}
+                       {:msg-id 13
+                        :sent-from 1
+                        :sent-time "xx-xx-xxxx"
+                        :msg-str "test msg test msg test msg hahhahaha"}
+                       {:msg-id 14
+                        :sent-from 3
+                        :sent-time "xx-xx-xxxx"
+                        :msg-str "test msg test msg test msg hahhahaha"}
+                       {:msg-id 15
+                        :sent-from 1
+                        :sent-time "xx-xx-xxxx"
+                        :msg-str "test msg test msg test msg hahhahaha"}
+                       {:msg-id 16
+                        :sent-from 1
+                        :sent-time "xx-xx-xxxx"
+                        :msg-str "test msg test msg test msg hahhahaha"}]))
+
+(defn find-user [users uid]
+  (->
+    (filter #(= (:uid %) uid) users)
+    (first)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Messages
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -69,6 +140,15 @@
                         {:class "img-avatar pull-left" :src img}))]
       [:div {:class "thread-avatar"}
        [:img (props-img thread)]])))
+
+(defn chat-avatar [msg]
+  (fn [msg]
+    (let [props (fn [msg]
+                  (if (= (.-uid js/cljat) (:sent-from msg))
+                    {:class "pull-right"}
+                    {:class "pull-left"}))]
+      [:div (props msg)
+       [:img {:class "chat-avatar" :src (user-avatar-url-fake (:sent-from msg))}]])))
 
 (defn user-profile [user]
   [:div {:class "user-profile"}
@@ -190,16 +270,56 @@
      [sidebar-pane @sidebar-tab-stats]
      [sidebar-tabs @sidebar-tab-stats]]))
 
+(defn chat-header []
+  (fn []
+    [:div {:id "chat-header" :class "header"}
+     [:div {:class "title"} "Chat Header"]]))
+
+
+(defn chat-msg-item [msg]
+  (fn [msg]
+    (let [props (fn [msg]
+                  (if (= (.-uid js/cljat) (:sent-from msg))
+                    {:class "message-feed right"}
+                    {:class "message-feed left"}))]
+      [:li {:class "msg-list-item"}
+       [:div (props msg)
+        [chat-avatar msg]
+        [:div {:class "media-body"}
+         [:div {:class "mf-content"} (:msg-str msg)]
+         #_[:small {:class "mf-date"}]]]])))
+
+(defn chat-msg-list [msgs]
+  (fn [msgs]
+    [:ul {:id "chat-msg-list" :class "list-group"}
+     (for [msg msgs]
+       ^{:key (:msg-id msg)} [chat-msg-item msg])]))
+
+(defn chat-pane []
+  (r/create-class
+    {:component-will-mount (fn [_]
+                             (js/console.log "chat pane -- will mount"))
+     :component-did-mount (fn [_]
+                            (js/console.log "chat pane -- did mount"))
+     :component-will-update (fn [_]
+                              (js/console.log "chat pane -- will update"))
+     :reagent-render (fn [user]
+                       (js/console.log "chat pane -- render")
+                       [:div {:id "chat-pane" :class "pane"}
+                        [chat-msg-list @messages]])}))
+
+(defn chat-input []
+  (fn []
+    [:div {:id "chat-input" :class "input-box"}
+      [:textarea {:id "msg-input" :placeholder "Write Message ..."}]
+      [:span [:input {:id "send-btn" :type "submit" :value "send"}]]]))
+
 (defn chat []
   (fn []
     [:div {:id "chat"}
-     [:div {:id "chat-header" :class "header"}
-      [:div {:class "title"} "Chat Header"]]
-     [:div {:id "chat-pane" :class "pane"}
-      [:div {:class "title"} "Chat Panel"]]
-     [:div {:id "chat-input" :class "input-box"}
-      [:textarea {:id "msg-input" :placeholder "Write Message ..."}]
-      [:span [:input {:id "send-btn" :type "submit" :value "send"}]]]]))
+     [chat-header]
+     [chat-pane]
+     [chat-input]]))
 
 (defn message-handler [ev-msg]
   (js/console.log "msg: " ev-msg))

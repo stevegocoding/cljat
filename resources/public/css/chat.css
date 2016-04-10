@@ -147,7 +147,7 @@ body, html {
     height: 37px;
     width: 37px;
     border-radius: 2px;
-    margin: 0 0 0 -45px;
+    margin: 1px 0 0 -45px;
 }
 
 .list-group .list-group-item {
@@ -292,3 +292,60 @@ Messages Input
 }
 
 #send-btn:focus {outline:0;}
+
+
+/*************************************************
+
+Messages
+
+*************************************************/
+
+.chat-avatar {
+    height: 37px;
+    width: 37px;
+    border-radius: 2px;
+}
+
+.msg-list-item {
+    display: block;
+    margin: 20px 0;
+}
+
+.message-feed.left {
+    padding-left: 5px;
+    padding-right: 20px;
+    margin-bototm: 20px;
+}
+
+.message-feed.right {
+    padding-left: 20px;
+    padding-right: 5px;
+    margin-bototm: 20px;
+    text-align: right;
+}
+
+.message-feed .pull-left {
+    padding-right: 10px;
+}
+
+.message-feed .pull-right {
+    padding-left: 10px;
+}
+
+
+.message-feed:not(.right) .mf-content {
+    background: #03a9f4;
+    color: #fff;
+    box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.2), 0 1px 5px 0 rgba(0, 0, 0, 0.12);
+}
+
+.message-feed.right .mf-content {
+    background: #eee;
+}
+
+.mf-content {
+    padding: 10px 5px 10px 5px;
+    border-radius: 2px;
+    display: inline-block;
+    max-width: 80%
+}
