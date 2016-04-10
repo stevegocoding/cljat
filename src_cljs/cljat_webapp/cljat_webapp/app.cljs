@@ -66,7 +66,7 @@
                        {:msg-id 8
                         :sent-from 1
                         :sent-time "xx-xx-xxxx"
-                        :msg-str "test msg test msg test msg hahhahaha"}
+                        :msg-str "test msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahaha"}
                        {:msg-id 9
                         :sent-from 3
                         :sent-time "xx-xx-xxxx"
@@ -86,7 +86,7 @@
                        {:msg-id 14
                         :sent-from 3
                         :sent-time "xx-xx-xxxx"
-                        :msg-str "test msg test msg test msg hahhahaha"}
+                        :msg-str "test msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahaha"}
                        {:msg-id 15
                         :sent-from 1
                         :sent-time "xx-xx-xxxx"
@@ -173,10 +173,14 @@
        ^{:key (:uid friend)} [friend-list-item friend])]))
 
 (defn threads-list-item [thread]
-  [:a {:class "thread-item list-group-item"}
-   [thread-avatar thread]
-   [:div {:class "thread-item-body media-body"}
-    [:small {:class "list-group-item-heading"} (:title thread)]]])
+  (fn [thread]
+    (let [thread-title (if (-> (:users thread) (count) (> 1))
+                         (:title thread)
+                         (:nickname (->> (first (:users thread)) (find-user @friends-info))))]
+      [:a {:class "thread-item list-group-item"}
+       [thread-avatar thread]
+       [:div {:class "thread-item-body media-body"}
+        [:small {:class "list-group-item-heading"} thread-title]]])))
 
 (defn threads-list [threads]
   (fn [threads]

@@ -72,7 +72,10 @@
 (defn seed-threads []
   (let [conn (db-conn)]
     (sql/insert! conn :threads (new-thread "baba mama & funny"))
-    (sql/insert! conn :threads (new-thread "corgi group"))))
+    (sql/insert! conn :threads (new-thread "corgi group"))
+    (sql/insert! conn :threads (new-thread "thread-1"))
+    (sql/insert! conn :threads (new-thread "thread-2"))
+    (sql/insert! conn :threads (new-thread "thread-3"))))
 
 (defn seed-users-threads []
   (let [conn (db-conn)]
@@ -80,6 +83,15 @@
       (doseq [r rel]
         (sql/insert! conn :users_threads {:thread_id (r 0) :user_id (r 1)})))
     (let [rel (new-users-threads conn "corgi group" ["funny" "coco" "woody" "yoshi"])]
+      (doseq [r rel]
+        (sql/insert! conn :users_threads {:thread_id (r 0) :user_id (r 1)})))
+    (let [rel (new-users-threads conn "thread-1" ["funny" "coco"])]
+      (doseq [r rel]
+        (sql/insert! conn :users_threads {:thread_id (r 0) :user_id (r 1)})))
+    (let [rel (new-users-threads conn "thread-2" ["funny" "steve"])]
+      (doseq [r rel]
+        (sql/insert! conn :users_threads {:thread_id (r 0) :user_id (r 1)})))
+    (let [rel (new-users-threads conn "thread-3" ["funny" "erika"])]
       (doseq [r rel]
         (sql/insert! conn :users_threads {:thread_id (r 0) :user_id (r 1)})))))
 
