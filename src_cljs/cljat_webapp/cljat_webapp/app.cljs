@@ -27,7 +27,7 @@
                             :title "corgi group"
                             :users [2 3]}]))
 
-(def sidebar-tab-stats (r/atom {:active :friends
+(def sidebar-tab-stats (r/atom {:active :threads
                                 :friends {}
                                 :threads {}}))
 
@@ -176,8 +176,15 @@
   (fn [thread]
     (let [thread-title (if (-> (:users thread) (count) (> 1))
                          (:title thread)
-                         (:nickname (->> (first (:users thread)) (find-user @friends-info))))]
-      [:a {:class "thread-item list-group-item"}
+                         (:nickname (->> (first (:users thread)) (find-user @friends-info))))
+          props-a (fn []
+                    {:id (str "thread-item-" (:tid thread)) :class "thread-item list-group-item"
+                     :on-click (fn [e]
+                                 (js/console.log "clicked thread: " (->> e
+                                                                      (.-currentTarget)
+                                                                      (.-id)
+                                                                      (re-find #"\d+"))))})]
+      [:a (props-a)
        [thread-avatar thread]
        [:div {:class "thread-item-body media-body"}
         [:small {:class "list-group-item-heading"} thread-title]]])))
@@ -192,13 +199,7 @@
 (defn sidebar-friends-pane [sidebar-stats]
   (r/create-class
     {:component-will-mount (fn [_]
-                             (js/console.log "sidebar friends pane -- will mount")
-                             (go
-                               (let [resp (<! (ajax-chan GET "/app/friends-info" {:user-id (.-uid js/cljat)}))]
-                                 (reset! friends-info (->
-                                                        (js->clj resp)
-                                                        (walk/keywordize-keys)
-                                                        (get-in [:data]))))))
+                             (js/console.log "sidebar friends pane -- will mount"))
      :component-did-mount (fn [_] (js/console.log "sidebar friends pane -- did mount"))
      :reagent-render (fn [sidebar-stats]
                        [:div {:id "sidebar-pane" :class "pane"}
@@ -349,6 +350,12 @@
     (r/create-class
       {:component-will-mount (fn [_]
                                (js/console.log "app component -- will mount")
+                               (go
+                                 (let [resp (<! (ajax-chan GET "/app/friends-info" {:user-id (.-uid js/cljat)}))]
+                                   (reset! friends-info (->
+                                                          (js->clj resp)
+                                                          (walk/keywordize-keys)
+                                                          (get-in [:data])))))
                                (go-loop []
                                  (let [val (<! ch-in)]
                                    (js/console.log "client recv!")
