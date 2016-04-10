@@ -176,6 +176,14 @@ Threads Panel
 }
 
 
+.list-group-item.thread-item:hover {
+    background-color: #39CCCC;
+}
+
+
+.thread-item.active {
+    background-color: #39CCCC;
+}
 
 
 /*************************************************

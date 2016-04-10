@@ -29,7 +29,7 @@
 
 (def sidebar-tab-stats (r/atom {:active :threads
                                 :friends {}
-                                :threads {}}))
+                                :threads {:cur 3}}))
 
 (def messages (r/atom [{:msg-id 0
                         :sent-from 1
@@ -178,12 +178,16 @@
                          (:title thread)
                          (:nickname (->> (first (:users thread)) (find-user @friends-info))))
           props-a (fn []
-                    {:id (str "thread-item-" (:tid thread)) :class "thread-item list-group-item"
+                    {:id (str "thread-item-" (:tid thread)) :class (if (= (:tid thread) (get-in @sidebar-tab-stats [:threads :cur]))
+                                                                     "thread-item list-group-item active"
+                                                                     "thread-item list-group-item")
                      :on-click (fn [e]
-                                 (js/console.log "clicked thread: " (->> e
-                                                                      (.-currentTarget)
-                                                                      (.-id)
-                                                                      (re-find #"\d+"))))})]
+                                 (let [tid (->> e
+                                             (.-currentTarget)
+                                             (.-id)
+                                             (re-find #"\d+"))]
+                                   (js/console.log "clicked thread: " tid)
+                                   (reset! sidebar-tab-stats (assoc-in @sidebar-tab-stats [:threads :cur] (int tid)))))})]
       [:a (props-a)
        [thread-avatar thread]
        [:div {:class "thread-item-body media-body"}
@@ -229,10 +233,6 @@
                                (js/console.log "sidebar header -- will mount")
                                (go
                                  (let [resp (<! (ajax-chan GET "/app/user-info" {}))]
-                                   #_(js/console.log "call /app/user-info ..."  (->
-                                                                                (js->clj resp)
-                                                                                (walk/keywordize-keys)
-                                                                                (get-in [:data :email])))
                                    (reset! user-info (->
                                                        (js->clj resp)
                                                        (walk/keywordize-keys)
