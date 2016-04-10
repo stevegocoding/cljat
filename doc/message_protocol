@@ -1,0 +1,95 @@
+/*********************************************************
+/// what server's got:
+**********************************************************/
+
+{
+  :?reply-fn nil,
+  :ch-recv #object[clojure.core.async.impl.channels.ManyToManyChannel 0x49ff3f9e clojure.core.async.impl.channels.ManyToManyChannel@49ff3f9e],
+  :client-id 29342e2c-17bb-4b56-a755-7c06fad6975d,
+  :connected-uids #atom[{:ws #{29342e2c-17bb-4b56-a755-7c06fad6975d 781a05ea-7c9f-4f3e-b460-3320124526a5},
+  :ajax #{},
+  :any #{29342e2c-17bb-4b56-a755-7c06fad6975d 781a05ea-7c9f-4f3e-b460-3320124526a5}} 0xfb91a69],
+  :uid 29342e2c-17bb-4b56-a755-7c06fad6975d,
+  :event [
+      :cljat/chat-msg
+      {
+        :data
+        {
+          :sent-from 3,
+          :sent-to 3,
+          :sent-time ,
+          :msg-str alsdfjlajslasjdf
+        }
+      }
+  ],
+  :id :cljat/chat-msg,
+  :ring-req <RING-REQ>,
+  :?data
+  {
+    :data
+    {
+      // App Message Protocol
+      :sent-from 3,
+      :sent-to 3,
+      :sent-time,
+      :msg-str alsdfjlajslasjdf
+    }
+  },
+  :send-fn #function[taoensso.sente/make-channel-socket-server!/send-fn--26158]
+}
+
+
+/************************************************
+Ring Request
+************************************************/
+{
+  :identity 3,
+  :cookies
+  {
+    cljat-token
+    {
+      :value eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXUyJ9.eyJ1aWQiOjMsImVtYWlsIjoiZnVubnkubGlhbmdAZ21haWwuY29tIiwibmlja25hbWUiOiJmdW5ueSIsImV4cCI6MTQ2MDM1NjY1MH0.RroJWDm_enujIX-wb6bm7W8N_k6TQrp_CWHLU_1VGq9NbNncjDDLurRDMwGejX3Nk2wd_5YeYTpRogY841ZJkhaiWl04zCnDsa1O1O8lxZeriDAR4P27MXWN77by8yiT5K25Blb9UGV2N16RO5h5zfRx2fuadbk0ul2P5ktT2xQaYtDvhYBbV1xQ8J5UruID-SKb_mmaxqhAgg_LiBcre_vqNWRilhJ3SGGaKBJdj7CXkFGP_oZOZ8J7MS7_LGuWoHEYt7y8LCngkUAt8kolL39mzggYShis2a4EY5RsJoPLZHH8Vayam0S1UpMtZCJuevWgoYRYW1MyKAoeoryD-A
+    }
+  },
+  :remote-addr 0:0:0:0:0:0:0:1,
+  :params
+  {
+    :client-id 29342e2c-17bb-4b56-a755-7c06fad6975d
+  },
+  :flash nil,
+  :route-params {},
+  :headers
+  {
+    origin http://localhost:8080,
+    host localhost:8080,
+    upgrade websocket,
+    user-agent Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.110 Safari/537.36,
+    cookie cljat-token=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXUyJ9.eyJ1aWQiOjMsImVtYWlsIjoiZnVubnkubGlhbmdAZ21haWwuY29tIiwibmlja25hbWUiOiJmdW5ueSIsImV4cCI6MTQ2MDM1NjY1MH0.RroJWDm_enujIX-wb6bm7W8N_k6TQrp_CWHLU_1VGq9NbNncjDDLurRDMwGejX3Nk2wd_5YeYTpRogY841ZJkhaiWl04zCnDsa1O1O8lxZeriDAR4P27MXWN77by8yiT5K25Blb9UGV2N16RO5h5zfRx2fuadbk0ul2P5ktT2xQaYtDvhYBbV1xQ8J5UruID-SKb_mmaxqhAgg_LiBcre_vqNWRilhJ3SGGaKBJdj7CXkFGP_oZOZ8J7MS7_LGuWoHEYt7y8LCngkUAt8kolL39mzggYShis2a4EY5RsJoPLZHH8Vayam0S1UpMtZCJuevWgoYRYW1MyKAoeoryD-A,
+    onnection Upgrade,
+    pragma no-cache,
+    sec-websocket-key wFPRzsAvwiLfCOXb92vbSg==,
+    accept-language en,en-US;q=0.8,fr;q=0.6,fr-FR;q=0.4,en-CA;q=0.2,zh-TW;q=0.2,zh;q=0.2,zh-CN;q=0.2,ja;q=0.2,
+    sec-websocket-version 13,
+    accept-encoding gzip, deflate, sdch, sec-websocket-extensions permessage-deflate; client_max_window_bits, cache-control no-cache
+  },
+  :async-channel #object[org.httpkit.server.AsyncChannel 0x6f596c44 /0:0:0:0:0:0:0:1:8080<->/0:0:0:0:0:0:0:1:51714],
+  :server-port 8080,
+  :content-length 0,
+  :form-params {},
+  :compojure/route [:get /ws],
+  :websocket? true,
+  :session/key nil,
+  :query-params {client-id 29342e2c-17bb-4b56-a755-7c06fad6975d},
+  :content-type nil,
+  :path-info /ws,
+  :character-encoding utf8,
+  :context /app,
+  :uri /app/ws,
+  :server-name localhost,
+  :query-string client-id=29342e2c-17bb-4b56-a755-7c06fad6975d,
+  :body nil,
+  :multipart-params {},
+  :scheme :http,
+  :request-method :get,
+  :session {}
+}
