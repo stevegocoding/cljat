@@ -135,7 +135,4 @@
   (refresh :after 'user/go))
 
 
-
-
-
-
+#_(m/find-threads-by-user-id (get-in sys [:routes :db]) 1)

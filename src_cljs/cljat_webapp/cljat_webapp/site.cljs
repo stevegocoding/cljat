@@ -22,19 +22,20 @@
 (defn error-handler [{:keys [status status-text]}]
   (.log js/console (str "something bad happened: " status " " status-text)))
 
-(let [login-ch (listen (dom/getElement "login-form") goog.events.EventType.SUBMIT)]
-  (go (while true
-        (let [e (<! login-ch)]
-          (.preventDefault e)
-          (let [form (dom/getElement "login-form")
-                email (.-value (dom/getElement "email-input"))
-                password (.-value (dom/getElement "password-input"))]
-            (POST "/login" {:params {:email email
-                                     :password password}
-                            :handler (fn [resp]
-                                       (go (<! (timeout 1000))
-                                           (.submit form)))
-                            :error-handler handler
-                            :format :json
-                            :response-format :json
-                            :keywords? true}))))))
+(when-let [el (dom/getElement "login-form")]
+  (let [login-ch (listen el goog.events.EventType.SUBMIT)]
+    (go (while true
+          (let [e (<! login-ch)]
+            (.preventDefault e)
+            (let [form (dom/getElement "login-form")
+                  email (.-value (dom/getElement "email-input"))
+                  password (.-value (dom/getElement "password-input"))]
+              (POST "/login" {:params {:email email
+                                       :password password}
+                              :handler (fn [resp]
+                                         (go (<! (timeout 1000))
+                                             (.submit form)))
+                              :error-handler handler
+                              :format :json
+                              :response-format :json
+                              :keywords? true})))))))

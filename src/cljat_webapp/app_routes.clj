@@ -94,6 +94,13 @@
       (status 404)
       (content-type "application/json; charset=utf-8"))))
 
+(defn get-user-threads-info [db user-id]
+  (let [threads (m/find-threads-by-user-id db user-id)]
+    (->
+      (response {:data threads})
+      (status 200)
+      (content-type "application/json; charset=utf-8"))))
+
 (defn not-found-route [req]
   (not-found "cljat 404"))
 
@@ -106,7 +113,9 @@
         (GET "/user-info" req (fn [req]
                                 (get-user-info (:identity req) db)))
         (GET "/friends-info" req (fn [req]
-                              (get-user-friends-info db (get-in req [:params :user-id])))))
+                                   (get-user-friends-info db (get-in req [:params :user-id]))))
+        (GET "/threads-info" req (fn [req]
+                                   (get-user-threads-info db (get-in req [:params :user-id])))))
       (wrap-stacktrace)
       ;;(wrap-resource "public")
       (wrap-authentication)

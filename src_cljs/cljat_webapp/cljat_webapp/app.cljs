@@ -3,7 +3,6 @@
   (:require [clojure.walk :as walk]
             [cljs.core.async :refer [<! >! chan timeout close! sliding-buffer take! put! alts!]]
             [reagent.core :as r]
-            [cljsjs.react-bootstrap]
             [taoensso.sente :as sente]
             [ajax.core :refer [GET POST]]
             [cljat-webapp.site]
@@ -11,77 +10,11 @@
 
 (enable-console-print!)
 
-(.log js/console "welcome to cljat!")
-
-(def button (r/adapt-react-class (aget js/ReactBootstrap "Button")))
-(def row (r/adapt-react-class (aget js/ReactBootstrap "Row")))
-(def col (r/adapt-react-class (aget js/ReactBootstrap "Col")))
-
-(def messages (r/atom [{:msg-id "msg-0000"
+#_(def messages (r/atom [{:msg-id "msg-0000"
                         :sent-from "Jack Sparrow"
                         :sent-time "xx-xx-xxxx"
                         :msg-str "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur bibendum ornare dolor, quis ullamcorper ligula sodales."
-                        }
-
-                       {:msg-id "msg-0001"
-                        :sent-from "user-0"
-                        :sent-time "xx-xx-xxxx"
-                        :msg-str "hahahahah"
-                        }
-
-                       {:msg-id "msg-0002"
-                        :sent-from "Mike"
-                        :sent-time "xx-xx-xxxx"
-                        :msg-str "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur bibendum ornare dolor, quis ullamcorper ligula sodales."
-                        }
-
-                       {:msg-id "msg-0003"
-                        :sent-from "user-0"
-                        :sent-time "xx-xx-xxxx"
-                        :msg-str "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur bibendum ornare dolor, quis ullamcorper ligula sodalels."
-                        }
-
-                       {:msg-id "msg-0004"
-                        :sent-from "Mike"
-                        :sent-time "xx-xx-xxxx"
-                        :msg-str "hehehehheehhehehe"
-                        }
-                       
-                       {:msg-id "msg-0005"
-                        :sent-from "Mike"
-                        :sent-time "xx-xx-xxxx"
-                        :msg-str "hehehehheehhehehe"
-                        }
-
-                       {:msg-id "msg-0006"
-                        :sent-from "Mike"
-                        :sent-time "xx-xx-xxxx"
-                        :msg-str "laskdjflkjsadfjk"
-                        }]
-                      ))
-
-(def client-info (r/atom {:user-name "user-0"}))
-(def chat-channel-states (r/atom [{:id "u-b-c888"
-                                   :members ["user-b", "user-c"]}
-                                  {:id "u-b-c999"
-                                   :members ["user-b", "user-c"]}
-                                  {:id "u-b-c1111"
-                                   :members ["user-b", "user-c"]}
-                                  {:id "u-b-c1222"
-                                   :members ["user-b", "user-c"]}]))
-
-(defn is-channel-seleted? [ch]
-  (:active ch))
-
-(defn chat-channel-title-str [ch]
-  (:id ch))
-
-(def sidebar-panel-states (r/atom {:contacts {:active false
-                                              :nav {:id "contacts-tab"
-                                                    :icon "glyphicon-user"}}
-                                   :chat {:active true
-                                          :nav {:id "chat-tab"
-                                                :icon "glyphicon-comment"}}}))
+                        }]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; New Stats
@@ -101,7 +34,7 @@
 ;; Messages
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn msg-item [{:keys [msg-id sent-from sent-time msg-str]}]
+#_(defn msg-item [{:keys [msg-id sent-from sent-time msg-str]}]
   (fn [{:keys [msg-id sent-from sent-time msg-str]}]
     (let [sent-from-me? (fn [sent-from]
                           (= sent-from (:user-name @client-info)))
@@ -117,135 +50,6 @@
           [:span {:class "glyphicon glyphicon-time"}]
           "12 mins ago"]]
         [:p msg-str]]])))
-
-(defn thread-list []
-  (fn []
-    [:ul {:class "chat-thread-list"}
-     (for [msg @messages]
-       ^{:key msg} [msg-item msg])]))
-
-(defn chat-box-panel-header []
-  (fn []
-    [:div {:id "chat-box-header" :class "panel-heading"}
-     [:span {:class "glyphicon glyphicon-comment"}]
-     " Chat" 
-     [:div {:class "btn-group pull-right"}
-      [button {:bsSize "xs"}
-       [:span {:class "glyphicon glyphicon-minus icon_minim"}]]
-      [button {:bsSize "xs"}
-       [:span {:class "glyphicon glyphicon-remove icon_close"}]]]]))
-
-(defn chat-box-panel-body []
-  (fn []
-    [:div {:class "chat-thread-container panel-body"}
-     [thread-list]]))
-
-(defn chat-box-panel-footer []
-  (fn []
-    [:div {:class "panel-footer"}
-     [:div {:class "input-group"}
-      [:input {:id "btn-input"
-               :class "form-control input-sm"
-               :type "text"
-               :placeholder "Type your message here ..."}]
-      
-      [:span {:class "input-group-btn"}
-       [button {:id "btn-send" :bsStyle "warning" :bsSize "sm"} "Send"]]]]))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Sidebar
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn chat-channel-item [channel]
-  (let [highlighted (r/atom false)]
-    (fn [channel]
-      (let [props-for (fn [ch]
-                        {:li {:class (str "chat-channel" (if @highlighted " active"))
-                              :on-mouse-over (fn [_] (swap! highlighted (constantly true)))
-                              :on-mouse-out (fn [e] (swap! highlighted (constantly false)))}
-                         :a {:class "clearfix"}
-                         :div {:class "chat-channel-title"}})
-            props (props-for channel)]
-        [:li (:li props)
-         [:a (:a props)
-          [:div (:div props)
-           [:strong (chat-channel-title-str channel)]]]]))))
-
-(defn chat-channel-list []
-  (fn []
-    [:ul {:class "chat-channel-list"}
-     (for [channel @chat-channel-states]
-       ^{:key (:id channel)} [chat-channel-item channel])]))
-
-(defn sidebar-panel [{:keys [name active]}]
-  (fn [{:keys [name active]}]
-    (js/console.log active)
-    (let [props-panel (fn [active]
-                        {:class (str "tab-pane" (if active " active"))})]
-      [:div (props-panel active)
-       (cond
-         (= name :chat)
-         [chat-channel-list]
-         (= name :contacts) (str name))])))
-
-(defn activate-panel [name]
-  (reduce #(update-in %1
-                      [%2 :active]
-                      (fn [_] (if (= %2 name) true false)))
-          @sidebar-panel-states
-          [:chat :contacts]))
-
-(defn sidebar-nav [{:keys [name id icon active]}]
-  (fn [{:keys [name id icon active]}]
-    (let [props-for-li (fn [name active]
-                         {:id name
-                          :class (str "sidebar-tab" (if active " highlighted"))})
-          props-for-a (fn [name] {:on-click (fn [_] (reset! sidebar-panel-states (activate-panel name)))})
-          props-for-icon (fn [icon] {:class (str "glyphicon " icon)})]
-      
-      [:li (props-for-li id active)
-       [:a (props-for-a name)
-        [:span (props-for-icon icon)]]])))
-
-(defn sidebar-navs-list []
-  (fn []
-    (let [props-for-nav (fn [name]
-                          (let [nav-states (get-in @sidebar-panel-states [name :nav])
-                                active (get-in @sidebar-panel-states [name :active])]
-                            (assoc nav-states :name name :active active )))]
-      [:ul {:class "sidebar-tabs nav nav-justified"}
-       [sidebar-nav (props-for-nav :contacts)]
-       [sidebar-nav (props-for-nav :chat)]
-       ])))
-
-(defn sidebar-panel-group []
-  (fn []
-    (let [props-for-panel (fn [name]
-                            (let [active (get-in @sidebar-panel-states [name :active])]
-                              {:name name :active active}))]
-      [:div {:class "tab-content"}
-       [sidebar-panel (props-for-panel :contacts)]
-       [sidebar-panel (props-for-panel :chat)]])))
-
-(defn sidebar-container []
-  (fn []
-    [:div {:id "sidebar-container" :class "cp-container"}
-     [:div {:class "sidebar-panel"}
-      [sidebar-panel-group]
-      [sidebar-navs-list]]]))
-
-
-(defn chat-container []
-  (fn []
-    [:div {:id "chat-container" :class "cp-container"}
-     [:div {:class "chat-panel panel panel-primary"}
-      ;; [chat-box-panel-header]
-      [chat-box-panel-body]
-      [chat-box-panel-footer]]]))
-
-(defn header-container []
-  (fn []
-    [:div {:id "header-container"}
-     [:nav {:class "navbar navbar-default"}]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -321,7 +125,7 @@
   (r/create-class
     {:component-will-mount (fn [_]
                              (js/console.log "sidebar threads pane -- will mount")
-                             #_(go
+                             (go
                                (let [resp (<! (ajax-chan GET "/app/threads-info" {:user-id (.-uid js/cljat)}))]
                                  (reset! threads-info (->
                                                         (js->clj resp)
@@ -439,9 +243,9 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def msgs (r/atom [{}]))
+#_(def msgs (r/atom [{}]))
 
-(defn add-message [msgs new-msg]
+#_(defn add-message [msgs new-msg]
   ;; keep the most recent 10 messages
   (cons new-msg msgs))
 
@@ -462,7 +266,7 @@
       (recur))))
 
 
-(defn message-input [new-msg-channel]
+#_(defn message-input [new-msg-channel]
   (let [!input-value (r/atom nil)]
     (fn [new-msg-channel]
       [:div
@@ -478,7 +282,7 @@
                                   (put! new-msg-channel @!input-value)
                                   (reset! !input-value "")))}]])))
 
-(defn message-list [msgs]
+#_(defn message-list [msgs]
   (fn [msg]
     [:div
      [:h3 "Messages from the server"]
