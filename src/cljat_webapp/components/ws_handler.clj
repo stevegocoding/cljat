@@ -3,7 +3,16 @@
             [clojure.core.async :refer [>! <! put! take! chan close! go go-loop alts! alt!]]
             [com.stuartsierra.component :as component]
             [taoensso.sente :as sente]
-            [taoensso.sente.server-adapters.http-kit :refer (sente-web-server-adapter)]))
+            [taoensso.sente.server-adapters.http-kit :refer (sente-web-server-adapter)]
+            [clj-time.core :as t]
+            [clj-time.coerce :as tc]))
+
+
+#_(defn process-msg [msg]
+  (let [id])
+  (cond
+    (= msg )))
+
 
 (defn start-msg-recv-loop! [in-ch out-ch]
   (log/info "Starting ws handler recv msg process ...")
@@ -11,20 +20,21 @@
     (go-loop []
       (let [[val ch] (alts! [in-ch stop-ch])]
         (when-not (= ch stop-ch)
-          (let [{:keys [event] :as msg} val]
-            (log/debug "ws-msg-recv-loop -- take a message from recv channel")
-            (log/debug "msg: " event)
-            (>! out-ch msg)
-            (log/debug "ws-msg-recv-loop -- put a message onto outgoing channnel"))
+          (let [{:keys [id event ?data] :as msg} val]
+            #_(log/debug "msg: " (:data ?data))
+            ;; add message's timestamp
+            (let [timestamp (tc/to-long (t/now))
+                  msg-to-send (update-in msg [:?data :data :timestamp] (constantly timestamp))]
+              (>! out-ch msg-to-send)))
          (recur))))
     
     (fn [] (put! stop-ch :stop))))
 
 (defn start-msg-echo-loop! [out-ch send-fn]
   (go-loop []
-    (let [{:keys [client-id ?data] :as msg} (<! out-ch)]
-      (log/debug "echo msg: " msg)
-      (send-fn client-id [:cljat.webapp.server/echo {:data (str "echo" (:data ?data))}])
+    (let [{:keys [client-id id ?data] :as msg} (<! out-ch)]
+      (log/debug "echo msg: " "id: " id " data: " ?data)
+      (send-fn client-id [id ?data])
       (recur))))
 
 

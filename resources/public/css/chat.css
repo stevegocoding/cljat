@@ -1,3 +1,5 @@
+
+/*
 @font-face{
     font-family: 'Fira Sans';
     src: url('//code.cdn.mozilla.net/fonts/eot/FiraSans-Light.eot');
@@ -30,6 +32,7 @@
     font-weight: 500;
     font-style: normal;
 }
+*/
 
 * {
     box-sizing: border-box;
@@ -40,9 +43,11 @@
 		padding: 0;
 }
 
-html, textarea, button {
+/*
+html, textarea, input[type=text],  button {
     font: 13px/20px 'Fira Sans', sans-serif;
 }
+*/
 
 body, html {
     background: url(/images/bg.jpg);

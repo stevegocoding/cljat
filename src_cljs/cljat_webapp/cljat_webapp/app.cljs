@@ -10,14 +10,8 @@
 
 (enable-console-print!)
 
-#_(def messages (r/atom [{:msg-id "msg-0000"
-                        :sent-from "Jack Sparrow"
-                        :sent-time "xx-xx-xxxx"
-                        :msg-str "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur bibendum ornare dolor, quis ullamcorper ligula sodales."
-                        }]))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; New Stats
+;; Stats
 
 (def user-info (r/atom {}))
 
@@ -31,67 +25,67 @@
                                 :friends {}
                                 :threads {:cur 3}}))
 
-(def messages (r/atom [{:msg-id 0
+(def messages (r/atom [{:timestamp 0
                         :sent-from 1
                         :sent-time "xx-xx-xxxx"
                         :msg-str "test msg test msg test msg hahhahaha"}
-                       {:msg-id 1
+                       {:timestamp 1
                         :sent-from 3
                         :sent-time "xx-xx-xxxx"
                         :msg-str "test msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahaha"}
-                       {:msg-id 2
+                       {:timestamp 2
                         :sent-from 1
                         :sent-time "xx-xx-xxxx"
                         :msg-str "test msg test msg test msg hahhahaha"}
-                       {:msg-id 3
+                       {:timestamp 3
                         :sent-from 1
                         :sent-time "xx-xx-xxxx"
                         :msg-str "test msg test msg test msg hahhahaha"}
-                       {:msg-id 4
+                       {:timestamp 4
                         :sent-from 1
                         :sent-time "xx-xx-xxxx"
                         :msg-str "test msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahaha"}
-                       {:msg-id 5
+                       {:timestamp 5
                         :sent-from 3
                         :sent-time "xx-xx-xxxx"
                         :msg-str "test msg test msg test msg hahhahaha"}
-                       {:msg-id 6
+                       {:timestamp 6
                         :sent-from 1
                         :sent-time "xx-xx-xxxx"
                         :msg-str "test msg test msg test msg hahhahaha"}
-                       {:msg-id 7
+                       {:timestamp 7
                         :sent-from 1
                         :sent-time "xx-xx-xxxx"
                         :msg-str "test msg test msg test msg hahhahaha"}
-                       {:msg-id 8
+                       {:timestamp 8
                         :sent-from 1
                         :sent-time "xx-xx-xxxx"
                         :msg-str "test msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahaha"}
-                       {:msg-id 9
+                       {:timestamp 9
                         :sent-from 3
                         :sent-time "xx-xx-xxxx"
                         :msg-str "test msg test msg test msg hahhahaha"}
-                       {:msg-id 11
+                       {:timestamp 11
                         :sent-from 1
                         :sent-time "xx-xx-xxxx"
                         :msg-str "test msg test msg test msg hahhahaha"}
-                       {:msg-id 12
+                       {:timestamp 12
                         :sent-from 1
                         :sent-time "xx-xx-xxxx"
                         :msg-str "test msg test msg test msg hahhahaha"}
-                       {:msg-id 13
+                       {:timestamp 13
                         :sent-from 1
                         :sent-time "xx-xx-xxxx"
                         :msg-str "test msg test msg test msg hahhahaha"}
-                       {:msg-id 14
+                       {:timestamp 14
                         :sent-from 3
                         :sent-time "xx-xx-xxxx"
                         :msg-str "test msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahaha"}
-                       {:msg-id 15
+                       {:timestamp 15
                         :sent-from 1
                         :sent-time "xx-xx-xxxx"
                         :msg-str "test msg test msg test msg hahhahaha"}
-                       {:msg-id 16
+                       {:timestamp 16
                         :sent-from 1
                         :sent-time "xx-xx-xxxx"
                         :msg-str "test msg test msg test msg hahhahaha"}]))
@@ -298,7 +292,7 @@
   (fn [msgs]
     [:ul {:id "chat-msg-list" :class "list-group"}
      (for [msg msgs]
-       ^{:key (:msg-id msg)} [chat-msg-item msg])]))
+       ^{:key (:timestamp msg)} [chat-msg-item msg])]))
 
 (defn chat-pane []
   (r/create-class
@@ -313,54 +307,65 @@
                        [:div {:id "chat-pane" :class "pane"}
                         [chat-msg-list @messages]])}))
 
-(defn chat-input []
-  (fn []
-    [:div {:id "chat-input" :class "input-box"}
-      [:textarea {:id "msg-input" :placeholder "Write Message ..."}]
-      [:span [:input {:id "send-btn" :type "submit" :value "send"}]]]))
+(defn chat-input [ch-out]
+  (let [input-value (r/atom "")]
+    (fn []
+      (let [on-change (fn [e]
+                        (reset! input-value (.-value (.-target e))))
+            on-key-press (fn [e]
+                           (when (= 13 (.-charCode e))
+                             (put! ch-out [:cljat/chat-msg {:data {:sent-from (.-uid js/cljat)
+                                                                   :sent-to (get-in @sidebar-tab-stats [:threads :cur])
+                                                                   :msg-str @input-value}}])
+                             (js/console.log "message sent")
+                             (reset! input-value "")))]
+        [:div {:id "chat-input" :class "input-box"}
+         [:input {:id "msg-input"
+                  :value @input-value
+                  :type "text"
+                  :size 50
+                  :placeholder "Write Message ..."
+                  :on-change on-change
+                  :on-key-press on-key-press}]
+         [:span [:input {:id "send-btn" :type "submit" :value "send"}]]]))))
 
-(defn chat []
+(defn chat [ch-out]
   (fn []
     [:div {:id "chat"}
      [chat-header]
      [chat-pane]
-     [chat-input]]))
+     [chat-input ch-out]]))
 
-(defn message-handler [ev-msg]
-  (js/console.log "msg: " ev-msg))
+(defn add-message [msg-data]
+  (js/console.log "msg data: " (:timestamp msg-data))
+  (swap! messages conj msg-data))
+
+(defn handle-msg [msg-id {msg-data :data}]
+  (js/console.log "received msg haha id: " (:timestamp msg-data))
+  (cond
+    (= msg-id :cljat/chat-msg) (add-message msg-data)))
 
 (defn app []
-  #_(fn []
-    [:div {:id "app-wrap" :class "wrap"} 
-     [:div {:id "header-wrap" :class "wrap"}
-      [row {:id "header-row"}
-       [col {:md 12}
-        [header-container]]
-       ]]
-     [:div {:id "main-wrap" :class "wrap"}
-      [row {:id "main-row"}
-       [col {:class "col" :md 4}
-        [sidebar-container]]
-       [col {:class "col" :md 8}
-        [chat-container]]
-       ]]])
   (let [ch-out (chan)
-        {:keys [ch-in stop-ws]} (init-ws! "/app/ws" ch-out)
-        msg-handler (fn [{:keys [id [ev-id {:keys [data] :as ?data} :as event]] :as ev-msg}] (js/console.log "id: " id " data: " (:data ?data) " event: " ev-id))]
+        {:keys [ch-in stop-ws]} (init-ws! "/app/ws" ch-out)]
     (r/create-class
       {:component-will-mount (fn [_]
                                (js/console.log "app component -- will mount")
+                               
                                (go
                                  (let [resp (<! (ajax-chan GET "/app/friends-info" {:user-id (.-uid js/cljat)}))]
                                    (reset! friends-info (->
                                                           (js->clj resp)
                                                           (walk/keywordize-keys)
                                                           (get-in [:data])))))
+                               
+                               ;; message receiving loop
                                (go-loop []
                                  (let [val (<! ch-in)]
                                    (js/console.log "client recv!")
-                                   (when-let [{:keys [id data event] :as ev-msg} val]
-                                     (msg-handler ev-msg)
+                                   (when-let [{:keys [event id ?data] :as ev-msg} val]
+                                     #_(js/console.log "received msg haha id: " (-> ?data (get 0)))
+                                     (handle-msg (?data 0) (?data 1))
                                      (recur)))))
        :component-did-mount (fn [_]
                               (js/console.log "app component -- did  mount"))
@@ -370,7 +375,7 @@
        :reagent-render (fn []
                          [:div {:id "window"}
                           [sidebar]
-                          [chat]])})))
+                          [chat ch-out]])})))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -393,7 +398,7 @@
   (go-loop []
     (when-let [msg (<! new-msg-ch)]
       (js/console.log "message sent!")
-      (send-fn [:cljat.webapp/hello- msg {:data msg}])
+      (send-fn [:cljat.webapp/hello-msg {:data msg}])
       (recur))))
 
 
@@ -441,9 +446,4 @@
   (mount-root))
 
 (defn ^:export run []
-  #_(let [{:keys [chsk ch-recv send-fn state]}
-        (sente/make-channel-socket-client! "/app/ws" {:type :ws})]
-    (send-msgs send-fn)
-    (receive-msgs msgs ch-recv)
-    (mount-root))
   (mount-root))
