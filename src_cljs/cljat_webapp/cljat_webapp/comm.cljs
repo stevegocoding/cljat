@@ -4,9 +4,11 @@
             [taoensso.sente :as sente]
             [ajax.core :refer [GET POST]]))
 
-(defn init-ws! [url ch-out]
+(defn init-ws! [url ch-out client-id]
+  (js/console.log "client: " client-id)
   (let [{:keys [chsk ch-recv send-fn state]}
-        (sente/make-channel-socket-client! url {:type :ws})
+        (sente/make-channel-socket-client! url {:type :ws
+                                                :client-id client-id})
         ch-in (chan)
         ch-stop (chan)]
     (go-loop []

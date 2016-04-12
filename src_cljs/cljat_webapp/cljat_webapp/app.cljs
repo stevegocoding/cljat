@@ -208,7 +208,7 @@
   (r/create-class
     {:component-will-mount (fn [_]
                              (js/console.log "sidebar threads pane -- will mount")
-                             (go
+                             #_(go
                                (let [resp (<! (ajax-chan GET "/app/threads-info" {:user-id (.-uid js/cljat)}))]
                                  (reset! threads-info (->
                                                         (js->clj resp)
@@ -347,17 +347,30 @@
 
 (defn app []
   (let [ch-out (chan)
-        {:keys [ch-in stop-ws]} (init-ws! "/app/ws" ch-out)]
+        {:keys [ch-in stop-ws]} (init-ws! "/app/ws" ch-out (str (.-uid js/cljat)))]
     (r/create-class
       {:component-will-mount (fn [_]
                                (js/console.log "app component -- will mount")
                                
                                (go
+                                 (js/console.log "ajax -- fetch friends list")
                                  (let [resp (<! (ajax-chan GET "/app/friends-info" {:user-id (.-uid js/cljat)}))]
                                    (reset! friends-info (->
                                                           (js->clj resp)
                                                           (walk/keywordize-keys)
-                                                          (get-in [:data])))))
+                                                          (get-in [:data]))))
+
+                                 (js/console.log "ajax -- fetch threads list")
+                                 (let [resp (<! (ajax-chan GET "/app/threads-info" {:user-id (.-uid js/cljat)}))]
+                                   (reset! threads-info (->
+                                                          (js->clj resp)
+                                                          (walk/keywordize-keys)
+                                                          (get-in [:data]))))
+
+                                 (js/console.log "ws -- send user-join msg to the ws server")
+                                 #_(>! ch-in "haha")
+                                 (>! ch-out [:cljat/user-join {:data {:uid (.-uid js/cljat)
+                                                                      :tids (reduce #(conj %1 (:tid %2)) [] @threads-info)}}]))
                                
                                ;; message receiving loop
                                (go-loop []

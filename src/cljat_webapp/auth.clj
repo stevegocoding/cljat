@@ -22,7 +22,7 @@
 (defn unsign-token [token pubkey & {:keys [alg]
                                     :or {alg :rs256}
                                     :as opts}]
-  (log/debug "token " token)
-  (log/debug "unsign token -- " pubkey)
-  (log/debug "alg: " alg)
+  #_(log/debug "token " token)
+  #_(log/debug "unsign token -- " pubkey)
+  #_(log/debug "alg: " alg)
   (jws/unsign token pubkey {:alg alg}))

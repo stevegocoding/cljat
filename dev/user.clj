@@ -1,5 +1,6 @@
 (ns user
   (:require [com.stuartsierra.component :as component]
+            [clojure.repl :refer [doc]]
             [clojure.pprint :refer [pprint]]
             [clojure.tools.namespace.repl :refer [refresh refresh-all]]
             [clojure.tools.logging :as log]
@@ -15,7 +16,7 @@
               [http-kit :refer [new-web-server]]
               [db :refer [new-db]]
               [endpoint :refer [new-endpoint]]
-              [redis :refer [new-redis]]
+              [redis :refer [new-redis-server]]
               [ws-handler :refer [new-ws-handler]]
               [msg-router :refer [new-msg-router]]
               [msg-echo :refer [new-msg-echo]])
@@ -59,7 +60,7 @@
        ;; :middleware (new-middleware [[wrap-stacktrace] [wrap-webjars] [wrap-defaults site-defaults] [wrap-reload]])
        
        ;; Redis client
-       ;; :redis (new-redis (:redis sys-config))
+       :redis (new-redis-server (:redis sys-config))
 
        ;; Database
        :db (new-db (:db sys-config))
@@ -69,7 +70,7 @@
 
        ;; A worker that take a message from an incoming channel, publish to redis and-
        ;; put the response message on an outgoing channel
-       ;; :msg-router (new-msg-router)
+       :msg-router (new-msg-router)
 
        ;; A test message echo component
        ;; :msg-echo (new-msg-echo)
@@ -84,8 +85,10 @@
        :web-server (new-web-server (:web sys-config)))
       
       (component/system-using
-       {:ws-handler [:router-ws-ch :ws-router-ch]
-        ;; :msg-router [:ws-router-ch :router-ws-ch :redis]
+       {:ws-handler [:router-ws-ch :ws-router-ch :redis]
+        :msg-router {:in-ch :ws-router-ch
+                     :out-ch :router-ws-ch
+                     :redis :redis}
         ;; :msg-echo {:in-ch :ws-router-ch :out-ch :router-ws-ch}
         
         :routes [:db :ws-handler]
