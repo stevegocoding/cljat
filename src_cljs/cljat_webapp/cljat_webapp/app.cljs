@@ -23,9 +23,9 @@
 
 (def sidebar-tab-stats (r/atom {:active :threads
                                 :friends {}
-                                :threads {:cur 3}}))
+                                :threads {:cur 0}}))
 
-(def messages (r/atom [{:timestamp 13
+#_(def messages (r/atom [{:timestamp 13
                         :sent-from 1
                         :sent-time "xx-xx-xxxx"
                         :msg-str "test msg test msg test msg hahhahaha"}
@@ -41,6 +41,8 @@
                         :sent-from 1
                         :sent-time "xx-xx-xxxx"
                         :msg-str "test msg test msg test msg hahhahaha"}]))
+
+(def threads-msg-inbox (r/atom {}))
 
 (defn find-user [users uid]
   (->
@@ -246,7 +248,7 @@
      (for [msg msgs]
        ^{:key (:timestamp msg)} [chat-msg-item msg])]))
 
-(defn chat-pane []
+(defn chat-pane [thread-id]
   (r/create-class
     {:component-will-mount (fn [_]
                              (js/console.log "chat pane -- will mount"))
@@ -254,10 +256,10 @@
                             (js/console.log "chat pane -- did mount"))
      :component-will-update (fn [_]
                               (js/console.log "chat pane -- will update"))
-     :reagent-render (fn [user]
-                       (js/console.log "chat pane -- render")
+     :reagent-render (fn [thread-id]
+                       (js/console.log "chat pane -- render: thread id: " thread-id)
                        [:div {:id "chat-pane" :class "pane"}
-                        [chat-msg-list @messages]])}))
+                        [chat-msg-list (@threads-msg-inbox thread-id)]])}))
 
 (defn chat-input [ch-out]
   (let [input-value (r/atom "")]
@@ -285,15 +287,22 @@
   (fn []
     [:div {:id "chat"}
      [chat-header]
-     [chat-pane]
+     [chat-pane (get-in @sidebar-tab-stats [:threads :cur])]
      [chat-input ch-out]]))
 
 (defn add-message [msg-data]
   (js/console.log "msg data: " (:timestamp msg-data))
-  (swap! messages conj msg-data))
+  (let [sent-to (:sent-to msg-data)]
+    #_(swap! messages conj msg-data)
+    (swap! threads-msg-inbox (fn [cur tid new-msg-data]
+                               (update cur tid (fn [v]
+                                                 (if-not v
+                                                   [new-msg-data]
+                                                   (conj v new-msg-data))
+                                                 ))) sent-to msg-data)))
 
 (defn handle-msg [msg-id {msg-data :data}]
-  (js/console.log "received msg haha id: " (:timestamp msg-data))
+  (js/console.log "received msg id: " (:timestamp msg-data))
   (cond
     (= msg-id :cljat/chat-msg) (add-message msg-data)))
 
@@ -314,10 +323,14 @@
 
                                  (js/console.log "ajax -- fetch threads list")
                                  (let [resp (<! (ajax-chan GET "/app/threads-info" {:user-id (.-uid js/cljat)}))]
-                                   (reset! threads-info (->
+                                   (let [threads-resp (->
                                                           (js->clj resp)
                                                           (walk/keywordize-keys)
-                                                          (get-in [:data]))))
+                                                          (get-in [:data]))]
+                                     (reset! threads-info threads-resp)
+                                     (if-not (empty? threads-resp)
+                                       (reset! sidebar-tab-stats
+                                         (assoc-in @sidebar-tab-stats [:threads :cur] (-> threads-resp (get 0) :tid))))))
 
                                  (js/console.log "ws -- send user-join msg to the ws server")
                                  #_(>! ch-in "haha")

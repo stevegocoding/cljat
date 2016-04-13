@@ -76,10 +76,11 @@
 (defn cleanup-user-info [redis uid]
   (let [conn (:redis-conn redis)]
     (log/debug "cleanup user info in redis")
-    (car/wcar conn
-      (let [tids (car/smembers (str "user:" uid))]
+    (let [tids (car/wcar conn
+                 (car/smembers (str "user:" uid)))]
+      (car/wcar conn
         (doseq [tid tids]
-          (log/debug "cleanup tids: " tids)
+          (log/debug "cleanup tids: " tid)
           (car/srem (str "thread:" tid) uid))
         (car/del (str "user:" uid))))))
 
