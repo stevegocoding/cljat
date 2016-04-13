@@ -9,21 +9,80 @@
             [cljat-webapp.components.redis :as r]))
 
 
+#_(defn process-msg [{:keys [id ?data] :as msg}]
+  (let [{msg-data :data} ?data
+        timestamp (tc/to-long (t/now))]
+    (cond
+      (= id :chsk/uidport-open) (do
+                                  
+                                  (let [user-id (:client-id msg)]
+                                    [id {:data (assoc msg-data :uid user-id :timestamp timestamp)}]))
+      (= id :cljat/user-join) (do
+                                (log/debug "msg route: " "user joined!" " data: " msg-data)
+                                [id {:data (assoc msg-data :timestamp timestamp)}])
+      (= id :cljat/chat-msg) (do
+                               (log/debug "msg route: " "chat msg received!" " data: " msg-data)
+                               [id {:data (assoc msg-data :timestamp timestamp)}])
+      (= id :chsk/uidport-close) (do
+                                   (log/debug "msg route: " "user disconnected!" " data: " msg-data)
+                                   (let [user-id (:client-id msg)]
+                                     [id {:data (assoc msg-data :uid user-id :timestamp timestamp)}])))))
+
+(defmulti process-ws-msg (fn [ws-msg] (:id ws-msg)))
+
+;; This is a system message that will be received when handshake is established
+(defmethod process-ws-msg :chsk/uidport-open
+  [ws-msg]
+  (log/debug "ws message received: " (:id ws-msg) " user: " (:client-id ws-msg))
+  (let [id (:id ws-msg)
+        user-id (:client-id ws-msg)
+        timestamp (tc/to-long (t/now))]
+    [id {:data {:uid user-id :timestamp timestamp}}]))
+
+;; This is a system message that will be received then a client is disconnected (eg. close the browser tab)
+(defmethod process-ws-msg :chsk/uidport-close
+  [ws-msg]
+  (log/debug "ws message received :chsk/uidport-close : " (:id ws-msg) " user: " (:client-id ws-msg))
+  (let [id (:id ws-msg)
+        user-id (:client-id ws-msg)
+        timestamp (tc/to-long (t/now))]
+    [id {:data {:uid user-id :timestamp timestamp}}]))
+
+(defmethod process-ws-msg :chsk/ws-ping
+  [ws-msg]
+  (log/debug "ws message received: " (:id ws-msg) " user: " (:client-id ws-msg))
+  (let [id (:id ws-msg)
+        user-id (:client-id ws-msg)
+        timestamp (tc/to-long (t/now))]
+    [id {:data {:uid user-id :timestamp timestamp}}]))
+
+(defmethod process-ws-msg :cljat/user-join
+  [ws-msg]
+  (log/debug "ws message received: " (:id ws-msg) " user: " (:client-id ws-msg))
+  (let [id (:id ws-msg)
+        user-id (:client-id ws-msg)
+        {msg-data :data} (:?data ws-msg)
+        timestamp (tc/to-long (t/now))]
+    [id {:data (assoc msg-data :uid user-id :timestamp timestamp)}]))
+
+(defmethod process-ws-msg :cljat/chat-msg
+  [ws-msg]
+  (log/debug "ws message received: " (:id ws-msg) " user: " (:client-id ws-msg))
+  (let [id (:id ws-msg)
+        user-id (:client-id ws-msg)
+        {msg-data :data} (:?data ws-msg)
+        timestamp (tc/to-long (t/now))]
+    [id {:data (assoc msg-data :uid user-id :timestamp timestamp)}]))
+
 (defn start-msg-recv-loop! [in-ch out-ch]
   (log/info "Starting ws handler recv msg process ...")
   (let [stop-ch (chan)]
     (go-loop []
       (let [[val ch] (alts! [in-ch stop-ch])]
         (when-not (= ch stop-ch)
-          (log/debug "msg---")
-          (let [{:keys [id event ?data] :as msg} val]
-            (log/debug "msg: " msg)
-            ;; add message's timestamp
-            (let [timestamp (tc/to-long (t/now))
-                  msg-body (assoc-in ?data [:data :timestamp] timestamp)
-                  msg [id msg-body]]
-              (log/debug "msg to send: " msg)
-              (>! out-ch msg)))
+          (log/debug "msg: " val)
+          (when-let [msg (process-ws-msg val)]
+            (>! out-ch msg))
          (recur))))
     
     (fn [] (put! stop-ch :stop))))
@@ -72,7 +131,10 @@
       :ajax-post-fn nil
       :ws-handshake-fn nil
       :client-uuids nil
-      :stop-recv-fn nil)))
+      :stop-recv-fn nil
+
+      :ws-router-ch nil
+      :router-ws-ch nil)))
 
 (defn new-ws-handler []
   (map->WSHandler {}))

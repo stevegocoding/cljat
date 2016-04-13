@@ -8,7 +8,6 @@
 ;; A messages router component that utilize redis to pub messags
 ;; across multiple web servers
 
-
 (defn listen-redis-pub [out-ch]
   (fn [[type channel content :as msg]]
     (log/debug "handle redis pub: ")
@@ -16,14 +15,14 @@
     (cond
       (= (get content 0) :cljat/chat-msg) (put! out-ch content))))
 
-
 (defn handle-msg [redis listener [id {msg-data :data} :as msg-body]]
   (cond
     (= id :chsk/uidport-open) (log/debug "msg route: " "user connected!" " data: " msg-data)
     (= id :cljat/user-join) (do
                               (log/debug "msg route: " "user joined!" " data: " msg-data)
                               ;; register this user's threads
-                              (doseq [thread-id (:tids msg-data)]
+                              (r/cache-user-info redis (:uid msg-data) (:tids msg-data) listener)
+                              #_(doseq [thread-id (:tids msg-data)]
                                 (r/add-user-to-thread redis thread-id (:uid msg-data))
                                 (r/sub-thread redis thread-id listener)))
     (= id :cljat/chat-msg) (do
@@ -32,7 +31,8 @@
     (= id :chsk/uidport-close) (do
                                  (log/debug "msg route: " "user disconnected!" " data: " msg-data)
                                  ;; remove the user from thread key when logged out
-                                 (doseq [thread-id (:tids msg-data)]
+                                (r/cleanup-user-info redis (:uid msg-data))
+                                 #_(doseq [thread-id (:tids msg-data)]
                                    (r/remove-user-from-thread redis thread-id (:uid msg-data))))))
 
 (defn start-msg-pub-loop! [in-ch out-ch redis]
@@ -57,7 +57,11 @@
     (start-msg-pub-loop! in-ch out-ch redis))
 
   (stop [component]
-    (log/info "Stopping  MessageRouter component ...")))
+    (log/info "Stopping  MessageRouter component ...")
+    (assoc component
+      :in-ch nil
+      :out-ch nil
+      :redis nil)))
 
 (defn new-msg-router []
   (map->MessageRouter {}))

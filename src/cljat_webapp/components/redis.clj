@@ -62,15 +62,26 @@
         channel (str "thread@" tid)]
     (car/wcar conn (car/publish channel msg))))
 
-(defn add-user-to-thread [redis tid uid]
+(defn cache-user-info [redis uid tids handle-redis]
   (let [conn (:redis-conn redis)
-        thread-key (str "thread:" tid)]
-    (car/wcar conn (car/sadd thread-key uid))))
+        listener (:listener redis)]
+    (car/wcar conn
+      (doseq [tid tids]
+        (car/sadd (str "user:" uid) tid)
+        (car/sadd (str "thread:" tid) uid)
+        (car/with-open-listener listener
+          (car/subscribe (str "thread@" tid))
+          (swap! (:state listener) assoc (str "thread@" tid) handle-redis))))))
 
-(defn remove-user-from-thread [redis tid uid]
-  (let [conn (:redis-conn redis)
-        thread-key (str "thread:" tid)]
-    (car/wcar conn (car/srem thread-key uid))))
+(defn cleanup-user-info [redis uid]
+  (let [conn (:redis-conn redis)]
+    (log/debug "cleanup user info in redis")
+    (car/wcar conn
+      (let [tids (car/smembers (str "user:" uid))]
+        (doseq [tid tids]
+          (log/debug "cleanup tids: " tids)
+          (car/srem (str "thread:" tid) uid))
+        (car/del (str "user:" uid))))))
 
 (defn thread-members [redis tid]
   (let [conn (:redis-conn redis)

@@ -25,55 +25,7 @@
                                 :friends {}
                                 :threads {:cur 3}}))
 
-(def messages (r/atom [{:timestamp 0
-                        :sent-from 1
-                        :sent-time "xx-xx-xxxx"
-                        :msg-str "test msg test msg test msg hahhahaha"}
-                       {:timestamp 1
-                        :sent-from 3
-                        :sent-time "xx-xx-xxxx"
-                        :msg-str "test msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahaha"}
-                       {:timestamp 2
-                        :sent-from 1
-                        :sent-time "xx-xx-xxxx"
-                        :msg-str "test msg test msg test msg hahhahaha"}
-                       {:timestamp 3
-                        :sent-from 1
-                        :sent-time "xx-xx-xxxx"
-                        :msg-str "test msg test msg test msg hahhahaha"}
-                       {:timestamp 4
-                        :sent-from 1
-                        :sent-time "xx-xx-xxxx"
-                        :msg-str "test msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahaha"}
-                       {:timestamp 5
-                        :sent-from 3
-                        :sent-time "xx-xx-xxxx"
-                        :msg-str "test msg test msg test msg hahhahaha"}
-                       {:timestamp 6
-                        :sent-from 1
-                        :sent-time "xx-xx-xxxx"
-                        :msg-str "test msg test msg test msg hahhahaha"}
-                       {:timestamp 7
-                        :sent-from 1
-                        :sent-time "xx-xx-xxxx"
-                        :msg-str "test msg test msg test msg hahhahaha"}
-                       {:timestamp 8
-                        :sent-from 1
-                        :sent-time "xx-xx-xxxx"
-                        :msg-str "test msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahaha"}
-                       {:timestamp 9
-                        :sent-from 3
-                        :sent-time "xx-xx-xxxx"
-                        :msg-str "test msg test msg test msg hahhahaha"}
-                       {:timestamp 11
-                        :sent-from 1
-                        :sent-time "xx-xx-xxxx"
-                        :msg-str "test msg test msg test msg hahhahaha"}
-                       {:timestamp 12
-                        :sent-from 1
-                        :sent-time "xx-xx-xxxx"
-                        :msg-str "test msg test msg test msg hahhahaha"}
-                       {:timestamp 13
+(def messages (r/atom [{:timestamp 13
                         :sent-from 1
                         :sent-time "xx-xx-xxxx"
                         :msg-str "test msg test msg test msg hahhahaha"}
@@ -382,8 +334,11 @@
                                      (recur)))))
        :component-did-mount (fn [_]
                               (js/console.log "app component -- did  mount"))
-       :component-will-unmount (fn [_]
-                                 (js/console.log "app component -- will unmount")
+       :component-will-unmount (fn [_]                                 
+                                 (go
+                                   
+                                   (js/console.log "app component -- will unmount")
+                                   (<! (timeout 2000)))
                                  (stop-ws))
        :reagent-render (fn []
                          [:div {:id "window"}

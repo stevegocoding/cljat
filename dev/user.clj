@@ -139,3 +139,4 @@
 
 
 #_(m/find-threads-by-user-id (get-in sys [:routes :db]) 1)
+#_(r/pub-msg (get-in sys [:redis]) "1" [:cljat/chat-msg {:data {:sent-to "4" :msg-str "from repl channel 4"}}])
