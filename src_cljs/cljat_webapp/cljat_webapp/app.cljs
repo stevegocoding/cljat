@@ -17,12 +17,14 @@
 
 (def friends-info (r/atom []))
 
+(def found-user-info (r/atom []))
+
 (def threads-info (r/atom [{:tid 1
                             :title "corgi group"
                             :users [2 3]}]))
 
 (def sidebar-tab-stats (r/atom {:active :threads
-                                :friends {}
+                                :friends {:show-search-result false}
                                 :threads {:cur 0}}))
 
 (def threads-msg-inbox (r/atom {}))
@@ -78,11 +80,14 @@
     [:div
      [:small {:class "list-group-item-text c-gray"} (:email friend)]]]])
 
-(defn friends-list [friends]
-  (fn [friends]
-    [:div {:class "friends-list list-group"}
-     (for [friend friends]
-       ^{:key (:uid friend)} [friend-list-item friend])]))
+(defn friends-list [sidebar-stats]
+  (fn [sidebar-stats]
+    (let [friends (if (get-in sidebar-stats [:friends :show-search-result])
+                    @found-user-info
+                    @friends-info)]
+      [:div {:class "friends-list list-group"}
+       (for [friend friends]
+         ^{:key (:uid friend)} [friend-list-item friend])])))
 
 (defn threads-list-item [thread]
   (fn [thread]
@@ -118,13 +123,23 @@
                         (reset! input-value (.-value (.-target e))))
             on-key-press (fn [e]
                            (when (= 13 (.-charCode e))
-                             (js/console.log "Search friends")))]
+                             (if (empty? @input-value)
+                               (reset! sidebar-tab-stats (assoc-in @sidebar-tab-stats [:friends :show-search-result] false))
+                               (go
+                                 (let [resp (<! (ajax-chan GET "/app/find-user-by-email" {:user-email @input-value}))]
+                                   (let [user-resp (->
+                                                     (js->clj resp)
+                                                     (walk/keywordize-keys)
+                                                     (get-in [:data]))]
+                                     (js/console.log "Search user")      
+                                     (reset! found-user-info [user-resp])
+                                     (reset! sidebar-tab-stats (assoc-in @sidebar-tab-stats [:friends :show-search-result] true))))))))]
         [:div {:id "friends-search" :class "search-input-box"}
          [:input {:id "friends-search-input"
                   :value @input-value
                   :type "text"
                   :size 30
-                  :placeholder "Search Friends ..."
+                  :placeholder "Search for a user ..."
                   :on-change on-change
                   :on-key-press on-key-press}]]))))
 
@@ -137,7 +152,7 @@
                        [:div {:id "sidebar-pane" :class "pane"}
                         [:div {:class "title"}
                          [friends-search-input]
-                         [friends-list @friends-info]]])}))
+                         [friends-list sidebar-stats]]])}))
 
 (defn sidebar-threads-pane [sidebar-stats]
   (r/create-class

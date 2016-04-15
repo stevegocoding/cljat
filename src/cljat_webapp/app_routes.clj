@@ -101,6 +101,14 @@
       (status 200)
       (content-type "application/json; charset=utf-8"))))
 
+(defn find-user-by-email [db email]
+  (let [user (m/find-user-by-email db email)]
+    (->
+      (response {:data user})
+      (status 200)
+      (content-type "application/json; charset=utf-8"))))
+
+
 (defn not-found-route [req]
   (not-found "cljat 404"))
 
@@ -112,6 +120,8 @@
         (GET "/ws" [] ws-handshake-fn)
         (GET "/user-info" req (fn [req]
                                 (get-user-info (:identity req) db)))
+        (GET "/find-user-by-email" req (fn [req]
+                                         (find-user-by-email db (get-in req [:params :user-email]))))
         (GET "/friends-info" req (fn [req]
                                    (get-user-friends-info db (get-in req [:params :user-id]))))
         (GET "/threads-info" req (fn [req]
