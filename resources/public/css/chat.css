@@ -362,3 +362,47 @@ Messages
     display: inline-block;
     max-width: 80%
 }
+
+.friends-list {
+    padding-top: 15px;
+}
+
+#friends-search-input {
+    width: 240px;
+    margin-left: 23px;
+    border: 1px solid #ccc;
+    
+
+    /*
+    -moz-border-radius: 10px;
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
+
+    -moz-box-shadow: 2px 2px 3px #666;
+    -webkit-box-shadow: 2px 2px 3px #666;
+    box-shadow: 2px 2px 3px #666;
+    
+    padding: 4px 7px;
+    
+    outline: 0;
+    -webkit-appearance: none;
+   */
+
+    border-radius:15px; 
+	  -moz-border-radius:15px; 
+	  -webkit-border-radius:15px;
+    padding:6px 15px 6px 30px;
+    outline: none;
+    background: url('/images/search.png') no-repeat 8px 8px; 
+}
+
+#friends-search-input:focus {
+    /* supported IE8+ and all other browsers tested.
+     * optional, but gives the input focues when selected.
+     * change to a color that suits your design.
+     */
+    border-color: #339933;
+} 
+    
+
+                         

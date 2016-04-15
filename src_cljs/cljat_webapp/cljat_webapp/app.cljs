@@ -25,23 +25,6 @@
                                 :friends {}
                                 :threads {:cur 0}}))
 
-#_(def messages (r/atom [{:timestamp 13
-                        :sent-from 1
-                        :sent-time "xx-xx-xxxx"
-                        :msg-str "test msg test msg test msg hahhahaha"}
-                       {:timestamp 14
-                        :sent-from 3
-                        :sent-time "xx-xx-xxxx"
-                        :msg-str "test msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahahatest msg test msg test msg hahhahaha"}
-                       {:timestamp 15
-                        :sent-from 1
-                        :sent-time "xx-xx-xxxx"
-                        :msg-str "test msg test msg test msg hahhahaha"}
-                       {:timestamp 16
-                        :sent-from 1
-                        :sent-time "xx-xx-xxxx"
-                        :msg-str "test msg test msg test msg hahhahaha"}]))
-
 (def threads-msg-inbox (r/atom {}))
 
 (defn find-user [users uid]
@@ -51,25 +34,6 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Messages
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-#_(defn msg-item [{:keys [msg-id sent-from sent-time msg-str]}]
-  (fn [{:keys [msg-id sent-from sent-time msg-str]}]
-    (let [sent-from-me? (fn [sent-from]
-                          (= sent-from (:user-name @client-info)))
-          is-me (sent-from-me? sent-from)
-          li-props (if is-me "right clearfix" "left clearfix")
-          strong-props (if is-me "pull-right primary-font" "primary-font")
-          small-props (if is-me "text-muted" "pull-right text-muted")]
-      [:li {:class li-props}
-       [:div {:class "msg-body clearfix"}
-        [:div {:class "header"}
-         [:strong {:class strong-props} (if is-me "ME" sent-from)]
-         [:small {:class small-props}
-          [:span {:class "glyphicon glyphicon-time"}]
-          "12 mins ago"]]
-        [:p msg-str]]])))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn user-avatar-url-fake [user-id]
@@ -147,6 +111,22 @@
      (for [thread threads]
        ^{:key (:tid thread)} [threads-list-item thread])]))
 
+(defn friends-search-input []
+  (let [input-value (r/atom "")]
+    (fn []
+      (let [on-change (fn [e]
+                        (reset! input-value (.-value (.-target e))))
+            on-key-press (fn [e]
+                           (when (= 13 (.-charCode e))
+                             (js/console.log "Search friends")))]
+        [:div {:id "friends-search" :class "search-input-box"}
+         [:input {:id "friends-search-input"
+                  :value @input-value
+                  :type "text"
+                  :size 30
+                  :placeholder "Search Friends ..."
+                  :on-change on-change
+                  :on-key-press on-key-press}]]))))
 
 (defn sidebar-friends-pane [sidebar-stats]
   (r/create-class
@@ -156,6 +136,7 @@
      :reagent-render (fn [sidebar-stats]
                        [:div {:id "sidebar-pane" :class "pane"}
                         [:div {:class "title"}
+                         [friends-search-input]
                          [friends-list @friends-info]]])}))
 
 (defn sidebar-threads-pane [sidebar-stats]
