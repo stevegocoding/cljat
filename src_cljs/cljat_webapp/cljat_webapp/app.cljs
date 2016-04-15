@@ -72,13 +72,19 @@
     [:div
      [:small {:class ""} (:email user)]]]])
 
-(defn friend-list-item [friend]
-  [:a {:class "friend-item list-group-item"}
-   [user-avatar friend]
-   [:div {:class "friend-item-body media-body"}
-    [:small {:class "list-group-item-heading"} (:nickname friend)]
-    [:div
-     [:small {:class "list-group-item-text c-gray"} (:email friend)]]]])
+(defn friend-list-item [sidebar-stats friend]
+  (fn [sidebar-stats friend]
+    [:a {:class "friend-item list-group-item"}
+     [user-avatar friend]
+     [:div {:class "friend-item-body media-body"}
+      [:small {:class "list-group-item-heading"} (:nickname friend)]
+      [:div
+       [:small {:class "list-group-item-text c-gray"} (:email friend)]]
+      (if (get-in sidebar-stats [:friends :show-search-result])
+        [:button.add-friend-btn {:on-click #(js/console.log "haha")}
+         [:span {:class "glyphicon glyphicon-plus"}]]
+        [:button.open-chat-btn {:on-click #(js/console.log "haha open chat")}
+         [:span {:class "glyphicon glyphicon-envelope"}]])]]))
 
 (defn friends-list [sidebar-stats]
   (fn [sidebar-stats]
@@ -87,7 +93,7 @@
                     @friends-info)]
       [:div {:class "friends-list list-group"}
        (for [friend friends]
-         ^{:key (:uid friend)} [friend-list-item friend])])))
+         ^{:key (:uid friend)} [friend-list-item sidebar-stats friend])])))
 
 (defn threads-list-item [thread]
   (fn [thread]
