@@ -102,13 +102,13 @@
       (content-type "application/json; charset=utf-8"))))
 
 (defn add-user-friend [db user-id friend-id]
-  (let [result (m/add-friendship db user-id friend-id)]
+  #_(let [result (m/add-friendship db user-id friend-id)]
     (->
       (response {:message "ok"})
       (status 200)
       (content-type "application/json; charset=utf-8")))
   
-  #_(->
+  (->
     (response {:message "ok"})
     (status 200)
     (content-type "application/json; charset=utf-8"))

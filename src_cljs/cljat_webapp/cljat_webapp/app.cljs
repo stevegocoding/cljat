@@ -248,9 +248,12 @@
 (defn chat-msg-item [msg]
   (fn [msg]
     (let [props (fn [msg]
-                  (if (= (.-uid js/cljat) (:sent-from msg))
-                    {:class "message-feed right"}
-                    {:class "message-feed left"}))]
+                  (cond
+                    (= (:msg-id msg) :cljat/chat-msg) (if (= (.-uid js/cljat) (:sent-from msg))
+                                                        {:class "message-feed right"}
+                                                        {:class "message-feed left"})
+                    (= (:msg-id msg) :cljat/add-friend) {:class "message-feed system-msg"}
+                    ))]
       [:li {:class "msg-list-item"}
        [:div (props msg)
         [chat-avatar msg]
@@ -317,13 +320,23 @@
                                                    (conj v new-msg-data))
                                                  ))) sent-to msg-data)))
 
+(defn add-system-message [msg-data]
+  (swap! threads-msg-inbox (fn [cur tid new-msg-data]
+                             (update cur tid (fn [v]
+                                               (if-not v
+                                                 [new-msg-data]
+                                                 (conj v new-msg-data))
+                                               ))) :sys  msg-data))
+
 (defn handle-msg [msg-id {msg-data :data}]
   (js/console.log "received msg id: " (:timestamp msg-data))
   (cond
-    (= msg-id :cljat/chat-msg) (add-message msg-data)
-    (= msg-id :cljat/add-friend) (go
-                                   (reset! friends-info (<! (fetch-friends-list (.-uid js/cljat))))
-                                   (reset! sidebar-tab-stats (assoc-in @sidebar-tab-stats [:friends :show-search-result] false)))))
+    (= msg-id :cljat/chat-msg) (add-message (assoc msg-data :msg-id msg-id))
+    (= msg-id :cljat/add-friend) (do
+                                   (go
+                                     (reset! friends-info (<! (fetch-friends-list (.-uid js/cljat))))
+                                     (reset! sidebar-tab-stats (assoc-in @sidebar-tab-stats [:friends :show-search-result] false)))
+                                   (add-system-message (assoc msg-data :msg-id msg-id)))))
 
 (defn app []
   (let [ch-out (chan)

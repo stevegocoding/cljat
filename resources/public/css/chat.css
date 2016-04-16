@@ -345,6 +345,13 @@ Messages
     padding-left: 10px;
 }
 
+.message-feed.system-msg {
+    text-align: center;
+    color: #B3B3B3;
+    font-size: 80%;
+}
+
+
 
 .message-feed:not(.right) .mf-content {
     background: #03a9f4;
@@ -363,6 +370,16 @@ Messages
     max-width: 80%
 }
 
+
+
+
+
+/*************************************************
+
+Friends
+
+*************************************************/
+
 .friends-list {
     padding-top: 15px;
 }
@@ -371,7 +388,6 @@ Messages
     width: 240px;
     margin-left: 23px;
     border: 1px solid #ccc;
-    
 
     /*
     -moz-border-radius: 10px;
@@ -463,3 +479,4 @@ button {
     bottom: 0px;
     left: 3px;
 }
+
