@@ -101,6 +101,19 @@
       (status 200)
       (content-type "application/json; charset=utf-8"))))
 
+(defn add-user-friend [db user-id friend-id]
+  (let [result (m/add-friendship db user-id friend-id)]
+    (->
+      (response {:message "ok"})
+      (status 200)
+      (content-type "application/json; charset=utf-8")))
+  
+  #_(->
+    (response {:message "ok"})
+    (status 200)
+    (content-type "application/json; charset=utf-8"))
+  )
+
 (defn find-user-by-email [db email]
   (let [user (m/find-user-by-email db email)]
     (->
@@ -124,6 +137,8 @@
                                          (find-user-by-email db (get-in req [:params :user-email]))))
         (GET "/friends-info" req (fn [req]
                                    (get-user-friends-info db (get-in req [:params :user-id]))))
+        (POST "/add-friend" req (fn [req]
+                                  (add-user-friend db (:identity req) (get-in req [:params :user-id]))))
         (GET "/threads-info" req (fn [req]
                                    (get-user-threads-info db (get-in req [:params :user-id])))))
       (wrap-stacktrace)

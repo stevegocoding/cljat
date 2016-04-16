@@ -6,7 +6,7 @@
             [taoensso.sente :as sente]
             [ajax.core :refer [GET POST]]
             [cljat-webapp.site]
-            [cljat-webapp.comm :refer [init-ws! ajax-chan]]))
+            [cljat-webapp.comm :refer [init-ws! ajax-chan fetch-friends-list]]))
 
 (enable-console-print!)
 
@@ -72,28 +72,39 @@
     [:div
      [:small {:class ""} (:email user)]]]])
 
-(defn friend-list-item [sidebar-stats friend]
-  (fn [sidebar-stats friend]
-    [:a {:class "friend-item list-group-item"}
-     [user-avatar friend]
-     [:div {:class "friend-item-body media-body"}
-      [:small {:class "list-group-item-heading"} (:nickname friend)]
-      [:div
-       [:small {:class "list-group-item-text c-gray"} (:email friend)]]
-      (if (get-in sidebar-stats [:friends :show-search-result])
-        [:button.add-friend-btn {:on-click #(js/console.log "haha")}
-         [:span {:class "glyphicon glyphicon-plus"}]]
-        [:button.open-chat-btn {:on-click #(js/console.log "haha open chat")}
-         [:span {:class "glyphicon glyphicon-envelope"}]])]]))
+(defn friend-list-item [sidebar-stats friend ch-out]
+  (let [add-friend (fn [uid]
+                     (go
+                       (let [resp (<! (ajax-chan POST "/app/add-friend" {:user-id uid}))]
+                         (let [user-resp (->
+                                           (js->clj resp)
+                                           (walk/keywordize-keys)
+                                           (get-in [:data]))]
+                           (js/console.log "Add friend" user-resp)
+                           (>! ch-out [:cljat/add-friend {:data {:sent-from (.-uid js/cljat)
+                                                                 :sent-to uid
+                                                                 :msg-str "add friend"}}])))))]
+    (fn [sidebar-stats friend]
+      [:a {:class "friend-item list-group-item"}
+       [user-avatar friend]
+       [:div {:class "friend-item-body media-body"}
+        [:small {:class "list-group-item-heading"} (:nickname friend)]
+        [:div
+         [:small {:class "list-group-item-text c-gray"} (:email friend)]]
+        (if (get-in sidebar-stats [:friends :show-search-result])
+          [:button.add-friend-btn {:on-click #(add-friend (:uid friend))}
+           [:span {:class "glyphicon glyphicon-plus"}]]
+          [:button.open-chat-btn {:on-click #(js/console.log "haha open chat")}
+           [:span {:class "glyphicon glyphicon-envelope"}]])]])))
 
-(defn friends-list [sidebar-stats]
+(defn friends-list [sidebar-stats ch-out]
   (fn [sidebar-stats]
     (let [friends (if (get-in sidebar-stats [:friends :show-search-result])
                     @found-user-info
                     @friends-info)]
       [:div {:class "friends-list list-group"}
        (for [friend friends]
-         ^{:key (:uid friend)} [friend-list-item sidebar-stats friend])])))
+         ^{:key (:uid friend)} [friend-list-item sidebar-stats friend ch-out])])))
 
 (defn threads-list-item [thread]
   (fn [thread]
@@ -149,16 +160,19 @@
                   :on-change on-change
                   :on-key-press on-key-press}]]))))
 
-(defn sidebar-friends-pane [sidebar-stats]
+(defn sidebar-friends-pane [sidebar-stats ch-out]
   (r/create-class
     {:component-will-mount (fn [_]
-                             (js/console.log "sidebar friends pane -- will mount"))
+                             (js/console.log "sidebar friends pane -- will mount")
+                             (go
+                               (let [friends-list (<! (fetch-friends-list (.-uid js/cljat)))]
+                                 (reset! friends-info friends-list))))
      :component-did-mount (fn [_] (js/console.log "sidebar friends pane -- did mount"))
      :reagent-render (fn [sidebar-stats]
                        [:div {:id "sidebar-pane" :class "pane"}
                         [:div {:class "title"}
                          [friends-search-input]
-                         [friends-list sidebar-stats]]])}))
+                         [friends-list sidebar-stats ch-out]]])}))
 
 (defn sidebar-threads-pane [sidebar-stats]
   (r/create-class
@@ -196,10 +210,10 @@
                        [:div {:id "sidebar-header" :class "header"}
                         [user-profile user]])}))
 
-(defn sidebar-pane [sidebar-stats]
+(defn sidebar-pane [sidebar-stats ch-out]
   (fn [sidebar-stats]
     (if (= (:active sidebar-stats) :friends)
-      [sidebar-friends-pane sidebar-stats]
+      [sidebar-friends-pane sidebar-stats ch-out]
       [sidebar-threads-pane sidebar-stats])))
 
 (defn sidebar-tabs [sidebar-stats]
@@ -218,11 +232,11 @@
         [:li (props-li :threads)
          [:a (props-a :threads) "CHAT"]]]])))
 
-(defn sidebar []
+(defn sidebar [ch-out]
   (fn []
     [:div {:id "sidebar"}
      [sidebar-header @user-info]
-     [sidebar-pane @sidebar-tab-stats]
+     [sidebar-pane @sidebar-tab-stats ch-out]
      [sidebar-tabs @sidebar-tab-stats]]))
 
 (defn chat-header []
@@ -306,7 +320,10 @@
 (defn handle-msg [msg-id {msg-data :data}]
   (js/console.log "received msg id: " (:timestamp msg-data))
   (cond
-    (= msg-id :cljat/chat-msg) (add-message msg-data)))
+    (= msg-id :cljat/chat-msg) (add-message msg-data)
+    (= msg-id :cljat/add-friend) (go
+                                   (reset! friends-info (<! (fetch-friends-list (.-uid js/cljat))))
+                                   (reset! sidebar-tab-stats (assoc-in @sidebar-tab-stats [:friends :show-search-result] false)))))
 
 (defn app []
   (let [ch-out (chan)
@@ -357,65 +374,8 @@
                                  (stop-ws))
        :reagent-render (fn []
                          [:div {:id "window"}
-                          [sidebar]
+                          [sidebar ch-out]
                           [chat ch-out]])})))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-#_(def msgs (r/atom [{}]))
-
-#_(defn add-message [msgs new-msg]
-  ;; keep the most recent 10 messages
-  (cons new-msg msgs))
-
-#_(defn receive-msgs [msgs recv-ch]
-  ;; get the message from the receiving channel, add it to messages atom
-  (go-loop []
-    (let [[val ch] (alts! [recv-ch stop-ch])]
-      (js/console.log "client recv!")
-      (when-let [{:keys [id data event] :as ev-msg} val]
-        (swap! msgs add-message event)
-        (recur)))))
-
-#_(defn send-msgs [send-fn]
-  (go-loop []
-    (when-let [msg (<! new-msg-ch)]
-      (js/console.log "message sent!")
-      (send-fn [:cljat.webapp/hello-msg {:data msg}])
-      (recur))))
-
-
-#_(defn message-input [new-msg-channel]
-  (let [!input-value (r/atom nil)]
-    (fn [new-msg-channel]
-      [:div
-       [:h3 "Send a message to server:"]
-       [:input {:type "text"
-                :size 50
-                :autofocus true
-                :value @!input-value
-                :on-change (fn [e]
-                             (reset! !input-value (.-value (.-target e))))
-                :on-key-press (fn [e]
-                                (when (= 13 (.-charCode e))
-                                  (put! new-msg-channel @!input-value)
-                                  (reset! !input-value "")))}]])))
-
-#_(defn message-list [msgs]
-  (fn [msg]
-    [:div
-     [:h3 "Messages from the server"]
-     [:ul
-      (if-let [msgs (seq @msgs)]
-        (for [msg msgs]
-          ^{:key msg} [:li (pr-str msg)])
-        [:li "None yet"])]]))
-
-#_(defn message-component []
-  [:div
-   [message-list msgs]
-   [message-input new-msg-ch]])
-
 
 (defn mount-root []
   (if-let [root-dom (.getElementById js/document "app")]

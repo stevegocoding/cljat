@@ -1,6 +1,7 @@
 (ns cljat-webapp.comm
   (:require-macros [cljs.core.async.macros :refer [go go-loop]])
-  (:require [cljs.core.async :refer [put! take! chan >! <! timeout close!]]
+  (:require [clojure.walk :as walk]
+            [cljs.core.async :refer [put! take! chan >! <! timeout close!]]
             [taoensso.sente :as sente]
             [ajax.core :refer [GET POST]]))
 
@@ -33,3 +34,12 @@
                   :format :json
                   :response-format :json})
     out))
+
+(defn fetch-friends-list [user-id]
+  (go
+    (js/console.log "ajax -- fetch friends list")
+    (let [resp (<! (ajax-chan GET "/app/friends-info" {:user-id user-id}))]
+      (->
+        (js->clj resp)
+        (walk/keywordize-keys)
+        (get-in [:data])))))

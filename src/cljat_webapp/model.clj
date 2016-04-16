@@ -16,6 +16,9 @@
     [(str "select fs.user_id as uid, fs.email, fs.nickname from users fs where fs.user_id in "
        "(" "select f.friend_id from users u join friendships f on u.user_id = f.user_id where u.user_id = ?" ")") user-id]))
 
+(defn add-friendship [db user-id friend-id]
+  (sql/insert! (:conn db) :friendships {:user_id user-id :friend_id friend-id} {:user_id friend-id :friend_id user-id}))
+
 (defn find-threads-by-user-id [db user-id]
   (sql/query (:conn db)
     [(str

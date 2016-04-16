@@ -13,7 +13,8 @@
     (log/debug "handle redis pub: ")
     (log/debug "type: " type " channel: " channel " content: " content)
     (cond
-      (= (get content 0) :cljat/chat-msg) (put! out-ch content))))
+      (= (get content 0) :cljat/chat-msg) (put! out-ch content)
+      (= (get content 0) :cljat/add-friend) (put! out-ch content))))
 
 (defn handle-msg [redis listener [id {msg-data :data} :as msg-body]]
   (cond
@@ -28,6 +29,11 @@
     (= id :cljat/chat-msg) (do
                              (log/debug "msg route: " "chat msg received!" " data: " msg-data)
                              (r/pub-msg redis (:sent-to msg-data) msg-body))
+    
+    (= id :cljat/add-friend) (do
+                               (log/debug "msg route: " "add friend received!" " data: " msg-data)
+                               (r/pub-msg redis "sys" msg-body))
+    
     (= id :chsk/uidport-close) (do
                                  (log/debug "msg route: " "user disconnected!" " data: " msg-data)
                                  ;; remove the user from thread key when logged out
@@ -35,7 +41,7 @@
                                  #_(doseq [thread-id (:tids msg-data)]
                                    (r/remove-user-from-thread redis thread-id (:uid msg-data))))))
 
-(defn start-msg-pub-loop! [in-ch out-ch redis]
+(defn start-msg-pub-loop! [in-ch out-ch redis listener]
   (log/info "Starting msg-router pub process ...")
   (let [stop-ch (chan)]
     (go-loop []
@@ -44,7 +50,7 @@
           #_(log/debug "msg router recv: " val)
           (let [[id {msg-data :data} :as msg-body] val]
             #_(log/debug "msg router recv: id - " id " data: " msg-data)
-            (handle-msg redis (listen-redis-pub out-ch) msg-body))
+            (handle-msg redis listener msg-body))
           (recur))))
     
     (fn [] (put! stop-ch :stop))))
@@ -54,7 +60,9 @@
 
   (start [component]
     (log/info "Starting MessageRouter component ...")
-    (start-msg-pub-loop! in-ch out-ch redis))
+    (let [listener (listen-redis-pub out-ch)]
+      (r/sub-thread redis "sys" listener)
+      (start-msg-pub-loop! in-ch out-ch redis listener)))
 
   (stop [component]
     (log/info "Stopping  MessageRouter component ...")

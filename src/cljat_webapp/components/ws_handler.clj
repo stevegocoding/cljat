@@ -9,25 +9,6 @@
             [cljat-webapp.components.redis :as r]))
 
 
-#_(defn process-msg [{:keys [id ?data] :as msg}]
-  (let [{msg-data :data} ?data
-        timestamp (tc/to-long (t/now))]
-    (cond
-      (= id :chsk/uidport-open) (do
-                                  
-                                  (let [user-id (:client-id msg)]
-                                    [id {:data (assoc msg-data :uid user-id :timestamp timestamp)}]))
-      (= id :cljat/user-join) (do
-                                (log/debug "msg route: " "user joined!" " data: " msg-data)
-                                [id {:data (assoc msg-data :timestamp timestamp)}])
-      (= id :cljat/chat-msg) (do
-                               (log/debug "msg route: " "chat msg received!" " data: " msg-data)
-                               [id {:data (assoc msg-data :timestamp timestamp)}])
-      (= id :chsk/uidport-close) (do
-                                   (log/debug "msg route: " "user disconnected!" " data: " msg-data)
-                                   (let [user-id (:client-id msg)]
-                                     [id {:data (assoc msg-data :uid user-id :timestamp timestamp)}])))))
-
 (defmulti process-ws-msg (fn [ws-msg] (:id ws-msg)))
 
 ;; This is a system message that will be received when handshake is established
@@ -74,6 +55,15 @@
         timestamp (tc/to-long (t/now))]
     [id {:data (assoc msg-data :uid user-id :timestamp timestamp)}]))
 
+(defmethod process-ws-msg :cljat/add-friend
+  [ws-msg]
+  (log/debug "ws message received: " (:id ws-msg) " user: " (:client-id ws-msg))
+  (let [id (:id ws-msg)
+        user-id (:client-id ws-msg)
+        {msg-data :data} (:?data ws-msg)
+        timestamp (tc/to-long (t/now))]
+    [id {:data (assoc msg-data :uid user-id :timestamp timestamp)}]))
+
 (defn start-msg-recv-loop! [in-ch out-ch]
   (log/info "Starting ws handler recv msg process ...")
   (let [stop-ch (chan)]
@@ -92,11 +82,19 @@
     (let [[id {msg-data :data} :as msg-body] (<! out-ch)]
       (log/debug "echo msg: " "id: " id " data: "  msg-data)
       (log/debug "echo msg: " "sent to: " (:sent-to msg-data))
-      (let [client-ids (r/thread-members redis (str (:sent-to msg-data)))]
-        (log/debug "echo msg -- receivers: " client-ids)
-        (doseq [client-id client-ids]
-          (log/debug "send msg: " client-id)
-          (send-fn (str client-id) [id {:data msg-data}])))
+      (cond
+        (= id :cljat/chat-msg) (do
+                                 (let [client-ids (r/thread-members redis (str (:sent-to msg-data)))]
+                                   (log/debug "echo msg -- receivers: " client-ids)
+                                   (doseq [client-id client-ids]
+                                     (log/debug "send msg: " client-id)
+                                     (send-fn (str client-id) [id {:data msg-data}]))))
+        (= id :cljat/add-friend) (do
+                                   (let [client-ids [(:sent-from msg-data) (:sent-to msg-data)]]
+                                     (log/debug "echo msg add friend  -- receivers: " client-ids)
+                                     (doseq [client-id client-ids]
+                                       (log/debug "send msg: " client-id)
+                                       (send-fn (str client-id) [id {:data msg-data}])))))
       (recur))))
 
 
