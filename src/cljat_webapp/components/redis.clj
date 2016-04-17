@@ -57,6 +57,16 @@
 
     (swap! (:state listener) assoc channel handler)))
 
+(defn new-thread [redis tid uids handle-redis]
+  (let [conn (:redis-conn redis)
+        listener (:listener redis)]
+    (car/wcar conn
+      (doseq [uid uids]
+        (car/sadd (str "thread:" tid) uid)
+        (car/with-open-listener listener
+          (car/subscribe (str "thread@" tid))
+          (swap! (:state listener) assoc (str "thread@" tid) handle-redis))))))
+
 (defn pub-msg [redis tid msg]
   (let [conn (:redis-conn redis)
         channel (str "thread@" tid)]

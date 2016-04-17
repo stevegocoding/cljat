@@ -6,7 +6,7 @@
             [taoensso.sente :as sente]
             [ajax.core :refer [GET POST]]
             [cljat-webapp.site]
-            [cljat-webapp.comm :refer [init-ws! ajax-chan fetch-friends-list]]))
+            [cljat-webapp.comm :refer [init-ws! ajax-chan fetch-friends-list fetch-threads-list add-thread]]))
 
 (enable-console-print!)
 
@@ -83,7 +83,20 @@
                            (js/console.log "Add friend" user-resp)
                            (>! ch-out [:cljat/add-friend {:data {:sent-from (.-uid js/cljat)
                                                                  :sent-to uid
-                                                                 :msg-str "add friend"}}])))))]
+                                                                 :msg-str "add friend"}}])))))
+        open-chat (fn [uid]
+                    (go
+                      (let [resp (<! (ajax-chan POST "/app/add-thread" {:user-id (.-uid js/cljat)
+                                                                        :friend-id uid}))]
+                        (let [thread-resp (->
+                                            (js->clj resp)
+                                            (walk/keywordize-keys)
+                                            (get-in [:data]))]
+                          (js/console.log "add thread: " thread-resp)
+                          (>! ch-out [:cljat/add-thread {:data {:sent-from (.-uid js/cljat)
+                                                                :sent-to uid
+                                                                :msg-str "add thread"
+                                                                :tid (:tid thread-resp)}}])))))]
     (fn [sidebar-stats friend]
       [:a {:class "friend-item list-group-item"}
        [user-avatar friend]
@@ -94,7 +107,7 @@
         (if (get-in sidebar-stats [:friends :show-search-result])
           [:button.add-friend-btn {:on-click #(add-friend (:uid friend))}
            [:span {:class "glyphicon glyphicon-plus"}]]
-          [:button.open-chat-btn {:on-click #(js/console.log "haha open chat")}
+          [:button.open-chat-btn {:on-click #(open-chat (:uid friend))}
            [:span {:class "glyphicon glyphicon-envelope"}]])]])))
 
 (defn friends-list [sidebar-stats ch-out]
@@ -178,12 +191,9 @@
   (r/create-class
     {:component-will-mount (fn [_]
                              (js/console.log "sidebar threads pane -- will mount")
-                             #_(go
-                               (let [resp (<! (ajax-chan GET "/app/threads-info" {:user-id (.-uid js/cljat)}))]
-                                 (reset! threads-info (->
-                                                        (js->clj resp)
-                                                        (walk/keywordize-keys)
-                                                        (get-in [:data]))))))
+                             (go
+                               (let [threads-list (<! (fetch-threads-list (.-uid js/cljat)))]
+                                 (reset! threads-info threads-list))))
      :component-did-mount (fn [_] (js/console.log "sidebar threads pane -- did mount"))
      :reagent-render (fn [sidebar-stats]
                        [:div {:id "sidebar-pane" :class "pane"}
@@ -248,12 +258,9 @@
 (defn chat-msg-item [msg]
   (fn [msg]
     (let [props (fn [msg]
-                  (cond
-                    (= (:msg-id msg) :cljat/chat-msg) (if (= (.-uid js/cljat) (:sent-from msg))
-                                                        {:class "message-feed right"}
-                                                        {:class "message-feed left"})
-                    (= (:msg-id msg) :cljat/add-friend) {:class "message-feed system-msg"}
-                    ))]
+                  (if (= (.-uid js/cljat) (:sent-from msg))
+                    {:class "message-feed right"}
+                    {:class "message-feed left"}))]
       [:li {:class "msg-list-item"}
        [:div (props msg)
         [chat-avatar msg]
@@ -336,7 +343,11 @@
                                    (go
                                      (reset! friends-info (<! (fetch-friends-list (.-uid js/cljat))))
                                      (reset! sidebar-tab-stats (assoc-in @sidebar-tab-stats [:friends :show-search-result] false)))
-                                   (add-system-message (assoc msg-data :msg-id msg-id)))))
+                                   (add-system-message (assoc msg-data :msg-id msg-id)))
+    (= msg-id :cljat/add-thread) (do
+                                   (go
+                                     (reset! threads-info (<! (fetch-threads-list (.-uid js/cljat))))
+                                     (reset! sidebar-tab-stats (assoc @sidebar-tab-stats :active :threads))))))
 
 (defn app []
   (let [ch-out (chan)

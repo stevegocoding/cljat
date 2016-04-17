@@ -102,17 +102,25 @@
       (content-type "application/json; charset=utf-8"))))
 
 (defn add-user-friend [db user-id friend-id]
-  #_(let [result (m/add-friendship db user-id friend-id)]
+  (let [result (m/add-friendship db user-id friend-id)]
     (->
       (response {:message "ok"})
       (status 200)
       (content-type "application/json; charset=utf-8")))
   
-  (->
+  #_(->
     (response {:message "ok"})
     (status 200)
     (content-type "application/json; charset=utf-8"))
   )
+
+(defn add-thread [db user-id friend-id]
+  (let [result (m/add-thread db user-id friend-id)]
+    (->
+      (response {:message "ok"
+                 :data {:tid result}})
+      (status 200)
+      (content-type "application/json; charset=utf-8"))))
 
 (defn find-user-by-email [db email]
   (let [user (m/find-user-by-email db email)]
@@ -120,7 +128,6 @@
       (response {:data user})
       (status 200)
       (content-type "application/json; charset=utf-8"))))
-
 
 (defn not-found-route [req]
   (not-found "cljat 404"))
@@ -140,7 +147,11 @@
         (POST "/add-friend" req (fn [req]
                                   (add-user-friend db (:identity req) (get-in req [:params :user-id]))))
         (GET "/threads-info" req (fn [req]
-                                   (get-user-threads-info db (get-in req [:params :user-id])))))
+                                   (get-user-threads-info db (get-in req [:params :user-id]))))
+        (POST "/add-thread" req (fn [req]
+                                   (add-thread db
+                                     (get-in req [:params :user-id])
+                                     (get-in req [:params :friend-id])))))
       (wrap-stacktrace)
       ;;(wrap-resource "public")
       (wrap-authentication)

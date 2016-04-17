@@ -64,6 +64,15 @@
         timestamp (tc/to-long (t/now))]
     [id {:data (assoc msg-data :uid user-id :timestamp timestamp)}]))
 
+(defmethod process-ws-msg :cljat/add-thread
+  [ws-msg]
+  (log/debug "ws message received: " (:id ws-msg) " user: " (:client-id ws-msg))
+  (let [id (:id ws-msg)
+        user-id (:client-id ws-msg)
+        {msg-data :data} (:?data ws-msg)
+        timestamp (tc/to-long (t/now))]
+    [id {:data (assoc msg-data :uid user-id :timestamp timestamp)}]))
+
 (defn start-msg-recv-loop! [in-ch out-ch]
   (log/info "Starting ws handler recv msg process ...")
   (let [stop-ch (chan)]
@@ -92,6 +101,12 @@
         (= id :cljat/add-friend) (do
                                    (let [client-ids [(:sent-from msg-data) (:sent-to msg-data)]]
                                      (log/debug "echo msg add friend  -- receivers: " client-ids)
+                                     (doseq [client-id client-ids]
+                                       (log/debug "send msg: " client-id)
+                                       (send-fn (str client-id) [id {:data msg-data}]))))
+        (= id :cljat/add-thread) (do
+                                   (let [client-ids [(:sent-from msg-data) (:sent-to msg-data)]]
+                                     (log/debug "echo msg add chat -- receivers: " client-ids)
                                      (doseq [client-id client-ids]
                                        (log/debug "send msg: " client-id)
                                        (send-fn (str client-id) [id {:data msg-data}])))))

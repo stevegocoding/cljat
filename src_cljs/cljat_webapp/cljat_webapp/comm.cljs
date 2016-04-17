@@ -43,3 +43,22 @@
         (js->clj resp)
         (walk/keywordize-keys)
         (get-in [:data])))))
+
+(defn fetch-threads-list [user-id]
+  (go
+    (js/console.log "ajax -- fetch threads list")
+    (let [resp (<! (ajax-chan GET "/app/threads-info" {:user-id user-id}))]
+      (->
+        (js->clj resp)
+        (walk/keywordize-keys)
+        (get-in [:data])))))
+
+(defn add-thread [user-id friend-id]
+  (go
+    (js/console.log "ajax -- create new chat")
+    (let [resp (<! (ajax-chan POST "/app/add-thread" {:user-id user-id
+                                                       :friend-id friend-id}))]
+      (->
+        (js->clj resp)
+        (walk/keywordize-keys)
+        (get-in [:data])))))

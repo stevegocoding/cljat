@@ -14,7 +14,8 @@
     (log/debug "type: " type " channel: " channel " content: " content)
     (cond
       (= (get content 0) :cljat/chat-msg) (put! out-ch content)
-      (= (get content 0) :cljat/add-friend) (put! out-ch content))))
+      (= (get content 0) :cljat/add-friend) (put! out-ch content)
+      (= (get content 0) :cljat/add-thread) (put! out-ch content))))
 
 (defn handle-msg [redis listener [id {msg-data :data} :as msg-body]]
   (cond
@@ -33,7 +34,12 @@
     (= id :cljat/add-friend) (do
                                (log/debug "msg route: " "add friend received!" " data: " msg-data)
                                (r/pub-msg redis "sys" msg-body))
-    
+
+    (= id :cljat/add-thread) (do
+                               (log/debug "msg route: " "add thread received!" " data: " msg-data)
+                               (r/new-thread redis (:tid msg-data) [(:sent-from msg-data)
+                                                                    (:sent-to msg-data)] listener)
+                               (r/pub-msg redis "sys" msg-body))
     (= id :chsk/uidport-close) (do
                                  (log/debug "msg route: " "user disconnected!" " data: " msg-data)
                                  ;; remove the user from thread key when logged out

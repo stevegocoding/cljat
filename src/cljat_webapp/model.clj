@@ -27,7 +27,8 @@
                           (sql/insert! conn :threads {:title "chat default" :created_time (tc/to-sql-time (t/now))})
                           (first) (vals) (first))]
       (sql/insert! conn :users_threads {:user_id user-id :thread_id new-thread-id})
-      (sql/insert! conn :users_threads {:user_id friend-id :thread_id new-thread-id}))))
+      (sql/insert! conn :users_threads {:user_id friend-id :thread_id new-thread-id})
+      new-thread-id)))
 
 (defn find-threads-by-user-id [db user-id]
   (sql/query (:conn db)
