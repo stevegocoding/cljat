@@ -10,21 +10,8 @@
   
   (start [component]
     (log/info "Starting Endpoint component ...")
-    (let [privkey (->
-                    (:private-key auth-config)
-                    (io/resource)
-                    (keys/private-key (:passphrase auth-config)))
-          pubkey (->
-                   (:public-key auth-config)
-                   (io/resource)
-                   (keys/public-key))]
-      (let [handler (routes-fn (assoc component
-                                 :privkey privkey
-                                 :pubkey pubkey))]
-        (assoc component
-          :handler handler
-          :privkey privkey
-          :pubkey pubkey))))
+    (let [handler (routes-fn component)]
+      (assoc component :handler handler)))
 
   (stop [component]
     (log/info "Stopping Endpoint component ...")

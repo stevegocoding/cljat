@@ -26,7 +26,7 @@
    :redis {:host (env :redis-host)
            :port (env :redis-port)}
    :db {:db-subprotocol "h2"
-        :db-subname "tcp://localhost/"
+        :db-subname ""
         :db-store "db/cljat"
         :db-driver "org.h2.Driver"
         :db-user "sa"
@@ -126,10 +126,8 @@
 
   (log/info "system config: " (system-config))
   
-  #_(init)
+  (init)
 
   (log/info "Starting system ...")
 
-  #_(start)
-
-)
+  (start))

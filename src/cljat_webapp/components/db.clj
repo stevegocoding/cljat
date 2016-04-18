@@ -1,5 +1,6 @@
 (ns cljat-webapp.components.db
-  (:require [clojure.java.io :as io]
+  (:require [clojure.tools.logging :as log]
+            [clojure.java.io :as io]
             [clojure.java.jdbc :as sql]
             [com.stuartsierra.component :as component])
   (:import com.mchange.v2.c3p0.ComboPooledDataSource))
@@ -28,8 +29,10 @@
   component/Lifecycle
 
   (start [component]
+    (log/info "Starting DB component ...")
     (let [spec (h2-db-spec db-config)
           pooled (pool spec)]
+      (log/debug "db spec" spec)
       (assoc component :conn pooled)))
 
   (stop [component]

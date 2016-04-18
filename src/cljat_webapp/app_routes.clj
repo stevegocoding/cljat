@@ -57,7 +57,7 @@
       (response)
       (content-type "text/html; charset=utf-8"))))
 
-(defn do-login [{:keys [email password] :as params} db privkey]
+#_(defn do-login [{:keys [email password] :as params} db privkey]
   (let [row (check-user-creds db email password)]
     (log/debug params)
     (log/debug "email: " email " password: " password)
@@ -148,7 +148,7 @@
 (defn not-found-route [req]
   (not-found "cljat 404"))
 
-(defn app-routes [{:keys [ws-handler db privkey pubkey]}]
+(defn app-routes [{:keys [ws-handler db]}]
   (let [ws-handshake-fn (:ws-handshake-fn ws-handler)]
     (->
       (routes
@@ -180,7 +180,7 @@
       (wrap-json-response)
       (wrap-reload))))
 
-(defn site-routes [{:keys [ws-handler db privkey pubkey]}]
+(defn site-routes [{:keys [ws-handler db]}]
   (let [wrap-site (fn [handler]
                     (-> handler
                       (wrap-stacktrace)
