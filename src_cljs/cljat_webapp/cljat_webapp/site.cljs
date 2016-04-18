@@ -33,6 +33,7 @@
               (POST "/login" {:params {:email email
                                        :password password}
                               :handler (fn [resp]
+                                         (js/console.log "login ok!")
                                          (go (<! (timeout 1000))
                                              (.submit form)))
                               :error-handler handler

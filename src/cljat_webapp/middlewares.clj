@@ -16,6 +16,14 @@
         (handler (assoc req :identity (:uid user-info)))
         (handler req)))))
 
+(defn wrap-auth-session [handler]
+  (fn [req]
+    (let [user-info (:session req)]
+      (log/debug "wrap-auth-session: " req)
+      (if user-info
+        (handler (assoc req :identity (:uid user-info)))
+        (handler req)))))
+
 (defn wrap-authentication [handler]
   (fn [req]
     (if (:identity req)

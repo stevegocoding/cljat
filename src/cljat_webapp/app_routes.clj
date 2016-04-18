@@ -15,6 +15,7 @@
      [params :refer :all]
      [resource :refer :all])
    [ring.middleware.json :refer :all]
+   [ring.middleware.session.cookie :refer :all]
    (compojure
      [core :refer [context routes GET POST ANY wrap-routes]]
      [route :as route])
@@ -22,7 +23,7 @@
    [selmer.parser :as parser]
    [environ.core :refer [env]]
    [cljat-webapp.auth :refer [check-user-creds sign-token unsign-token]]
-   [cljat-webapp.middlewares :refer [wrap-authentication wrap-auth-token-cookie]]
+   [cljat-webapp.middlewares :refer [wrap-authentication wrap-auth-token-cookie wrap-auth-session]]
    [cljat-webapp.api :refer [api-routes]]
    [cljat-webapp.model :as m]))
 
@@ -56,7 +57,7 @@
       (response)
       (content-type "text/html; charset=utf-8"))))
 
-(defn do-login[{:keys [email password] :as params} db privkey]
+(defn do-login [{:keys [email password] :as params} db privkey]
   (let [row (check-user-creds db email password)]
     (log/debug params)
     (log/debug "email: " email " password: " password)
@@ -71,6 +72,21 @@
           (response {:message "Invalid email or password"})
           (status 401)
           (content-type "application/json; charset=utf-8")))))
+
+(defn do-login-session [{:keys [email password] :as params} db]
+  (let [row (check-user-creds db email password)]
+    (log/debug params)
+    (log/debug "email: " email " password: " password)
+    (if row
+      (->
+        (response {:message "ok" :data {:redirect "/app/chat"}})
+        (assoc :session {:uid (:uid row)})
+        (status 200)
+        (content-type "application/json; charset=utf-8"))
+      (->
+        (response {:message "Invalid email or password"})
+        (status 401)
+        (content-type "application/json; charset=utf-8")))))
 
 (defn get-user-info [user-id db]
   (if-let [user (m/find-user-by-id db user-id)]
@@ -155,10 +171,11 @@
       (wrap-stacktrace)
       ;;(wrap-resource "public")
       (wrap-authentication)
-      (wrap-auth-token-cookie pubkey)
-      (wrap-defaults (assoc site-defaults :security false))
-      ;;(wrap-keyword-params)
-      ;;(wrap-params)
+      ;;(wrap-auth-token-cookie pubkey)
+      (wrap-auth-session)
+      (wrap-defaults (assoc site-defaults
+                       :security false
+                       :session {:store (cookie-store {:key "a 16-byte secret"})}))
       (wrap-json-params)
       (wrap-json-response)
       (wrap-reload))))
@@ -167,10 +184,13 @@
   (let [wrap-site (fn [handler]
                     (-> handler
                       (wrap-stacktrace)
-                      ;;(wrap-session)
-                      ;;(wrap-defaults (assoc site-defaults :security false))
-                      (wrap-cookies)
-                      (wrap-keyword-params)
+                      ;;(wrap-session {:cookie-attrs {:secure true}})
+                      (wrap-auth-session)
+                      (wrap-defaults (assoc site-defaults
+                                       :security false
+                                       :session {:store (cookie-store {:key "a 16-byte secret"})}))
+                      ;;(wrap-cookies)
+                      ;;(wrap-keyword-params)
                       (wrap-json-response)
                       (wrap-json-params)
                       (wrap-reload)))]
@@ -185,16 +205,18 @@
                              (log/debug "--- " req)
                              #_(-> (response "Hello World")
                                  (content-type "text/plain"))
-                             (do-login (:params req) db privkey)))
+                             #_(do-login (:params req) db privkey)
+                             (do-login-session (:params req) db)))
         (POST "/login-form" req (fn [req]
-                                  (redirect "app/chat"))))
+                                  (do
+                                    (log/debug "login-form -- " req)
+                                    (redirect "app/chat")))))
       (wrap-routes wrap-site))))
 
 (defn new-app-routes [endpoint]
   (routes
     (route/resources "/")
     (route/resources "/bootstrap/" {:root "META-INF/resources/webjars/bootstrap/3.3.6/"})
-    (route/resources "/gss/" {:root "META-INF/resources/webjars/gss/2.0.0/dist/"})
     (site-routes endpoint)
     (context "/api" []
       (api-routes endpoint))
