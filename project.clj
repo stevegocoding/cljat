@@ -78,17 +78,9 @@
             [migratus-lein "0.2.6"]]
 
   ;; Clojurescript compiler configs
-  
-
-
-
-  ;;:hooks [leiningen.cljsbuild]
-
-  
-
-
   :resource-paths ["resources" "resources/templates"]
-;;; File System Paths
+  
+  ;; File System Paths
   :source-paths ["src", "src_cljs"]
 
   ;; profile-isolated target paths
@@ -97,9 +89,42 @@
   :clean-targets ^{:protect false} ["resources/public/js"
                                     :target-path]
 
-;;; Entry Point
+ 
+  ;; Entry Point
   :main cljat-webapp.main
   :nrepl-options {:init-ns user}
+
+  :cljsbuild {:builds [{:id "dev"
+                        :source-paths ["src_cljs/cljat_webapp"]
+                        :figwheel {:websocket-host "localhost"
+                                   :on-jsload cljat-webapp.app/fig-reload}
+                        :compiler {:main "cljat-webapp.app"
+                                   :asset-path "js/cljat_webapp/out"
+                                   :output-to "resources/public/js/cljat_webapp/app.js"
+                                   :output-dir "resources/public/js/cljat_webapp/out"
+                                   :optimizations :none
+                                   :pretty-print true}}
+
+                       {:id "test"
+                        :source-paths ["src_cljs/cljat_webapp"]
+                        :jar true
+                        :compiler {:output-to "resources/public/js/cljat_webapp/app.js"
+                                   :optimizations :advanced}}
+                       ]}
+  
+  :figwheel {:http-server-root "public"
+             :server-ip "0.0.0.0"
+             :server-port 8081
+             
+             ;; CSS reloading
+             :css-dirs ["resources/public/css"]
+
+             ;; nRepl
+             :nrepl-port 7889
+             :nrepl false
+             :hawk-options {:watcher :polling}
+
+             :server-logfile "log/figwheel_server.log"}  
   
   :profiles {
              :dev [:project-dev :local-dev]
@@ -120,31 +145,7 @@
                            :nrepl-middleware ["cemerick.piggieback/wrap-cljs-repl"]
                            
                            :host "0.0.0.0"
-                           :env {:cljat-env "development"}
-                           :cljsbuild {:builds [{:id "dev"
-                                                 :source-paths ["src_cljs/cljat_webapp"]
-                                                 :figwheel {:websocket-host "localhost"
-                                                            :on-jsload cljat-webapp.app/fig-reload}
-                                                 :compiler {:main "cljat-webapp.app"
-                                                            :asset-path "js/cljat_webapp/out"
-                                                            :output-to "resources/public/js/cljat_webapp/app.js"
-                                                            :output-dir "resources/public/js/cljat_webapp/out"
-                                                            :optimizations :none
-                                                            :pretty-print true}}]}
-                           :figwheel {:http-server-root "public"
-                                      :server-ip "0.0.0.0"
-                                      :server-port 8081
-                                      
-                                      ;; CSS reloading
-                                      :css-dirs ["resources/public/css"]
-
-                                      ;; nRepl
-                                      :nrepl-port 7889
-                                      :nrepl false
-                                      :hawk-options {:watcher :polling}
-
-                                      :server-logfile "log/figwheel_server.log" 
-                                      }}
+                           :env {:cljat-env "development"}}
              
              ;; be overriden by the values from  profiles.clj
              :local-dev {}
@@ -152,9 +153,6 @@
              ;; uberjar task profile
              ;; The :default profile will be removed when generating uberjar
              :uberjar {:aot :all
-                       :prep-tasks ["compile" ["cljsbuild" "once"]]
-                       :cljsbuild {:builds [{:id "test"
-                                             :source-paths ["src_cljs/cljat_webapp"]
-                                             :jar true
-                                             :compiler {:output-to "resources/public/js/cljat_webapp/app.js"
-                                                        :optimizations :advanced}}]}}})
+                       :prep-tasks ["compile" ["cljsbuild" "once" "test"]]
+                       ;;:cljsbuild {:builds []}
+                       }})
