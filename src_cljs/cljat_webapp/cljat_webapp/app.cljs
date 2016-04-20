@@ -351,10 +351,21 @@
 
 (defn app []
   (let [ch-out (chan)
+        ch-ready (chan)
         {:keys [ch-in stop-ws]} (init-ws! "/app/ws" ch-out (str (.-uid js/cljat)))]
     (r/create-class
       {:component-will-mount (fn [_]
                                (js/console.log "app component -- will mount")
+                               
+                               (go-loop []
+                                   (let [{:keys [event]} (<! ch-in)]
+                                     #_(js/console.log "ws init -- " (?data 0) (?data 1))
+                                     (js/console.log "ws init -- " (event 0) (event 1))
+                                     (if (and
+                                           (= (event 0) :chsk/state)
+                                           (:first-open? (event 1)))
+                                       (>! ch-ready :ready)
+                                       (recur))))
                                
                                (go
                                  (js/console.log "ajax -- fetch friends list")
@@ -375,8 +386,11 @@
                                        (reset! sidebar-tab-stats
                                          (assoc-in @sidebar-tab-stats [:threads :cur] (-> threads-resp (get 0) :tid))))))
 
+                                 ;; Wait for sente websocket is ready
+                                 
+
+                                 (<! ch-ready)
                                  (js/console.log "ws -- send user-join msg to the ws server")
-                                 #_(>! ch-in "haha")
                                  (>! ch-out [:cljat/user-join {:data {:uid (.-uid js/cljat)
                                                                       :tids (reduce #(conj %1 (:tid %2)) [] @threads-info)}}]))
                                
@@ -385,7 +399,6 @@
                                  (let [val (<! ch-in)]
                                    (js/console.log "client recv!")
                                    (when-let [{:keys [event id ?data] :as ev-msg} val]
-                                     #_(js/console.log "received msg haha id: " (-> ?data (get 0)))
                                      (handle-msg (?data 0) (?data 1))
                                      (recur)))))
        :component-did-mount (fn [_]

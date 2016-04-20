@@ -130,4 +130,9 @@
 
   (log/info "Starting system ...")
 
-  (start))
+  (start)
+
+  ;;(log/info "Stopping system ...")
+  
+  ;;(stop)
+  )
