@@ -34,6 +34,9 @@
     (filter #(= (:uid %) uid) users)
     (first)))
 
+(defn find-thread-users [threads-info [:as uids]]
+  (filter #(= (compare uids (:users %)) 0) threads-info))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Messages
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -85,18 +88,20 @@
                                                                  :sent-to uid
                                                                  :msg-str "add friend"}}])))))
         open-chat (fn [uid]
-                    (go
-                      (let [resp (<! (ajax-chan POST "/app/add-thread" {:user-id (.-uid js/cljat)
-                                                                        :friend-id uid}))]
-                        (let [thread-resp (->
-                                            (js->clj resp)
-                                            (walk/keywordize-keys)
-                                            (get-in [:data]))]
-                          (js/console.log "add thread: " thread-resp)
-                          (>! ch-out [:cljat/add-thread {:data {:sent-from (.-uid js/cljat)
-                                                                :sent-to uid
-                                                                :msg-str "add thread"
-                                                                :tid (:tid thread-resp)}}])))))]
+                    (if (empty? (find-thread-users @threads-info [uid]))
+                      (go
+                        (let [resp (<! (ajax-chan POST "/app/add-thread" {:user-id (.-uid js/cljat)
+                                                                          :friend-id uid}))]
+                          (let [thread-resp (->
+                                              (js->clj resp)
+                                              (walk/keywordize-keys)
+                                              (get-in [:data]))]
+                            (js/console.log "add thread: " thread-resp)
+                            (>! ch-out [:cljat/add-thread {:data {:sent-from (.-uid js/cljat)
+                                                                  :sent-to uid
+                                                                  :msg-str "add thread"
+                                                                  :tid (:tid thread-resp)}}]))))
+                      (reset! sidebar-tab-stats (assoc @sidebar-tab-stats :active :threads))))]
     (fn [sidebar-stats friend]
       [:a {:class "friend-item list-group-item"}
        [user-avatar friend]
