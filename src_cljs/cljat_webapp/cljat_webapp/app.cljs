@@ -77,16 +77,18 @@
 
 (defn friend-list-item [sidebar-stats friend ch-out]
   (let [add-friend (fn [uid]
-                     (go
-                       (let [resp (<! (ajax-chan POST "/app/add-friend" {:user-id uid}))]
-                         (let [user-resp (->
-                                           (js->clj resp)
-                                           (walk/keywordize-keys)
-                                           (get-in [:data]))]
-                           (js/console.log "Add friend" user-resp)
-                           (>! ch-out [:cljat/add-friend {:data {:sent-from (.-uid js/cljat)
-                                                                 :sent-to uid
-                                                                 :msg-str "add friend"}}])))))
+                     (if (nil? (find-user @friends-info uid))
+                       (go
+                         (let [resp (<! (ajax-chan POST "/app/add-friend" {:user-id uid}))]
+                           (let [user-resp (->
+                                             (js->clj resp)
+                                             (walk/keywordize-keys)
+                                             (get-in [:data]))]
+                             (js/console.log "Add friend" user-resp)
+                             (>! ch-out [:cljat/add-friend {:data {:sent-from (.-uid js/cljat)
+                                                                   :sent-to uid
+                                                                   :msg-str "add friend"}}]))))
+                       (reset! sidebar-tab-stats (assoc-in @sidebar-tab-stats [:friends :show-search-result] false))))
         open-chat (fn [uid]
                     (if (empty? (find-thread-users @threads-info [uid]))
                       (go
@@ -143,7 +145,11 @@
       [:a (props-a)
        [thread-avatar thread]
        [:div {:class "thread-item-body media-body"}
-        [:small {:class "list-group-item-heading"} thread-title]]])))
+        [:div {:class "list-group-item-heading"} thread-title]
+        [:small {:class "list-group-item-text c-gray"} (->
+                                                         (@threads-msg-inbox (:tid thread))
+                                                         (last)
+                                                         :msg-str)]]])))
 
 (defn threads-list [threads]
   (fn [threads]
@@ -329,16 +335,14 @@
                                (update cur tid (fn [v]
                                                  (if-not v
                                                    [new-msg-data]
-                                                   (conj v new-msg-data))
-                                                 ))) sent-to msg-data)))
+                                                   (conj v new-msg-data))))) sent-to msg-data)))
 
 (defn add-system-message [msg-data]
   (swap! threads-msg-inbox (fn [cur tid new-msg-data]
                              (update cur tid (fn [v]
                                                (if-not v
                                                  [new-msg-data]
-                                                 (conj v new-msg-data))
-                                               ))) :sys  msg-data))
+                                                 (conj v new-msg-data))))) :sys  msg-data))
 
 (defn handle-msg [msg-id {msg-data :data}]
   (js/console.log "received msg id: " (:timestamp msg-data))
@@ -392,8 +396,6 @@
                                          (assoc-in @sidebar-tab-stats [:threads :cur] (-> threads-resp (get 0) :tid))))))
 
                                  ;; Wait for sente websocket is ready
-                                 
-
                                  (<! ch-ready)
                                  (js/console.log "ws -- send user-join msg to the ws server")
                                  (>! ch-out [:cljat/user-join {:data {:uid (.-uid js/cljat)
@@ -409,10 +411,9 @@
        :component-did-mount (fn [_]
                               (js/console.log "app component -- did  mount"))
        :component-will-unmount (fn [_]                                 
-                                 (go
-                                   
+                                 (go                          
                                    (js/console.log "app component -- will unmount")
-                                   (<! (timeout 2000)))
+                                   (<! (timeout 1000)))
                                  (stop-ws))
        :reagent-render (fn []
                          [:div {:id "window"}

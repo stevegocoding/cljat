@@ -31,6 +31,12 @@
       new-thread-id)))
 
 (defn find-threads-by-user-id [db user-id]
+  "Example: select u.user_id as uid, u.nickname, ut.thread_id as tid, t.title, t.created_time from users u 
+        inner join users_threads ut on u.user_id = ut.user_id 
+        inner join threads t on ut.thread_id = t.thread_id 
+        where ut.thread_id in 
+        (select ut2.thread_id from users_threads ut2 inner join users u2 on ut2.user_id = u2.user_id where u2.user_id = 4)
+        and u.user_id != 4"
   (sql/query (:conn db)
     [(str
        "select u.user_id as uid, u.nickname, ut.thread_id as tid, t.title, t.created_time from users u " 
