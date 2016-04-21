@@ -34,6 +34,11 @@
     (filter #(= (:uid %) uid) users)
     (first)))
 
+(defn find-thread [threads tid]
+  (->
+    (filter #(= (:tid %) tid) threads)
+    (first)))
+
 (defn find-thread-users [threads-info [:as uids]]
   (filter #(= (compare uids (:users %)) 0) threads-info))
 
@@ -260,10 +265,24 @@
      [sidebar-pane @sidebar-tab-stats ch-out]
      [sidebar-tabs @sidebar-tab-stats]]))
 
-(defn chat-header []
-  (fn []
-    [:div {:id "chat-header" :class "header"}
-     [:div {:class "title"} "Chat Header"]]))
+(defn chat-header [thread-id]
+  (fn [thread-id]
+    (let [thread (find-thread @threads-info thread-id)
+          props-img (fn [thread]
+                      (let [img (if (-> (:users thread) (count) (> 1))
+                                  "/images/avatars/group.png"
+                                  (user-avatar-url-fake (first (:users thread))))]
+                        {:class "header-avatar pull-left" :src img}))
+          props-span (fn [thread]
+                       {:class "header-name"})]
+      [:div {:id "chat-header" :class "header"}
+       [:div {:class "pull-left title"}
+        (when thread
+          [:div {:class "friend-avatar"}
+           [:img (props-img thread)]
+           [:span (props-span thread) (if (-> (:users thread) (count) (> 1))
+                                        (:title thread)
+                                        (->> (:users thread) (first) (find-user @friends-info) (:nickname)))]])]])))
 
 
 (defn chat-msg-item [msg]
@@ -304,7 +323,9 @@
       (let [on-change (fn [e]
                         (reset! input-value (.-value (.-target e))))
             on-key-press (fn [e]
-                           (when (= 13 (.-charCode e))
+                           (when (and
+                                   (= 13 (.-charCode e))
+                                   (seq @input-value))
                              (put! ch-out [:cljat/chat-msg {:data {:sent-from (.-uid js/cljat)
                                                                    :sent-to (get-in @sidebar-tab-stats [:threads :cur])
                                                                    :msg-str @input-value}}])
@@ -323,7 +344,7 @@
 (defn chat [ch-out]
   (fn []
     [:div {:id "chat"}
-     [chat-header]
+     [chat-header (get-in @sidebar-tab-stats [:threads :cur])]
      [chat-pane (get-in @sidebar-tab-stats [:threads :cur])]
      [chat-input ch-out]]))
 

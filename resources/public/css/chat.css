@@ -155,6 +155,17 @@ body, html {
     margin: 1px 0 0 -45px;
 }
 
+.header-avatar {
+    height: 37px;
+    width: 37px;
+}
+
+.header-name {
+    position: absolute;
+    margin-left: 10px;
+    top: 20px;
+}
+
 .list-group .list-group-item {
     border: 0;
 }
@@ -165,7 +176,7 @@ body, html {
     left: 0;
     height: 55px;
     background: #f8f8f8;
-    padding: 10px 20px 10px 75px;
+    padding: 14px 20px 10px 75px;
 }
 
 /*************************************************
