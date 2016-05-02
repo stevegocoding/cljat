@@ -33,6 +33,12 @@
   {:title title
    :created_time (tc/to-sql-time (t/now))})
 
+(defn new-message [from to content]
+  {:sender_id from
+   :dest_id to
+   :content content
+   :timestamp (tc/to-sql-time (t/now))})
+
 (defn find-user-id-by-nickname [conn nickname]
   (sql/query conn ["select user_id from users where nickname = ?" nickname]
              :result-set-fn first))
@@ -95,8 +101,22 @@
       (doseq [r rel]
         (sql/insert! conn :users_threads {:thread_id (r 0) :user_id (r 1)})))))
 
+(defn seed-messages []
+  (let [conn (db-conn)
+        tid-1 (:thread_id (find-thread-id-by-title conn "thread-1"))
+        tid-2 (:thread_id (find-thread-id-by-title conn "thread-2"))
+        tid-3 (:thread_id (find-thread-id-by-title conn "baba mama & funny"))
+        uid-1 (:user_id (find-user-id-by-nickname conn "funny"))
+        uid-2 (:user_id (find-user-id-by-nickname conn "steve"))
+        uid-3 (:user_id (find-user-id-by-nickname conn "coco"))]
+    (sql/insert! conn :messages (new-message uid-1 tid-3 "from funny - hi baba mama"))
+    (sql/insert! conn :messages (new-message uid-2 tid-2 "from steve - hi funny, this is baba"))
+    (sql/insert! conn :messages (new-message uid-3 tid-1 "from coco - hi funny, this is coco"))))
+
 (defn seed-all []
-  (seed-users)
-  (seed-friendships)
-  (seed-threads)
-  (seed-users-threads))
+  (do
+    (seed-users)
+    (seed-friendships)
+    (seed-threads)
+    (seed-users-threads)
+    (seed-messages)))

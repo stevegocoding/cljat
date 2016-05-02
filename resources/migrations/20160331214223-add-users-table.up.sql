@@ -1,6 +1,6 @@
 CREATE TABLE users
 (
-  user_id                 INT           NOT NULL AUTO_INCREMENT,
+  user_id                 BIGINT           NOT NULL AUTO_INCREMENT,
   email                   VARCHAR(254)  NOT NULL,
   nickname                VARCHAR(50)   NOT NULL,
   password                VARCHAR(200)  NOT NULL,
