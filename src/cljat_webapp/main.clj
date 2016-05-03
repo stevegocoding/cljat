@@ -84,6 +84,8 @@
         ;; :handler [:middleware :routes]
         ;; :web-server [:handler]
         :web-server [:routes]
+
+        :redis [:db]
         })))
 
 (defn init
