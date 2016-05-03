@@ -6,17 +6,22 @@
   </head>
   <body>
       {% style "/bootstrap/css/bootstrap.min.css" %}
+      {% style "/font-awesome/css/font-awesome.min.css" %}
       {% style "/css/login.css" %}
       
-      <div class="sitewrap">
-          Welcome to cljat login
-
-          <div class="login-container">
-              <h1>Login to Your Account</h1><br>
+      <div class="login">
+          <div class="heading">
+              <h2>Sign in</h2>
 				      <form id="login-form" action="/login-form" method="post">
-					        <input type="text" id="email-input" name="useremail" placeholder="Username">
-					        <input type="password" id="password-input" name="password" placeholder="Password">
-					        <input type="submit" id="login-btn" name="login" class="login" value="Login">
+                  <div class="input-group input-group-lg">
+                      <span class="input-group-addon"><i class="fa fa-user"></i></span>
+                      <input type="text" id="email-input" class="form-control" name="useremail" placeholder="E-Mail">
+                  </div>
+                  <div class="input-group input-group-lg">
+                      <span class="input-group-addon"><i class="fa fa-lock"></i></span>
+                      <input type="password" id="password-input" class="form-control" name="password" placeholder="Password">
+                  </div>
+					        <button type="submit" id="login-btn" name="login" class="login float">Login</button>
 				      </form>
 					    
 				      <div class="login-help">

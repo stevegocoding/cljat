@@ -25,8 +25,11 @@
 (when-let [el (dom/getElement "login-form")]
   (let [login-ch (listen el goog.events.EventType.SUBMIT)]
     (go (while true
-          (let [e (<! login-ch)]
+          (let [e (<! login-ch)
+                login-btn (dom/getElement "login-btn")]
             (.preventDefault e)
+            (set! (.-innerHTML login-btn) "Logging in ...")
+            (set! (.-disabled login-btn) true)
             (let [form (dom/getElement "login-form")
                   email (.-value (dom/getElement "email-input"))
                   password (.-value (dom/getElement "password-input"))]

@@ -226,6 +226,7 @@
   (routes
     (route/resources "/")
     (route/resources "/bootstrap/" {:root "META-INF/resources/webjars/bootstrap/3.3.6/"})
+    (route/resources "/font-awesome/" {:root "META-INF/resources/webjars/font-awesome/4.5.0/"})
     (site-routes endpoint)
     (context "/api" []
       (api-routes endpoint))
