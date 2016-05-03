@@ -1,11 +1,13 @@
 (ns cljat-webapp.components.redis
   (:require [com.stuartsierra.component :as component]
             [taoensso.carmine :as car]
+            [taoensso.carmine.message-queue :as car-mq]
             [schema.core :as s]
             [schema.coerce :as coerce]
             [schema.utils :as s-utils]
             [cljat-webapp.schema :refer :all]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [cljat-webapp.model :as m]))
 
 
 (def RedisOptions
@@ -25,21 +27,44 @@
   (car/with-new-pubsub-listener (:spec conn)
     {}))
 
-(defrecord Redis [options a]
+
+(defn mq-handler [db]
+  (fn [{:keys [message attempt]}]
+    (log/info "MQ Received" message)
+    (m/insert-message db
+      (:sent-from message)
+      (:sent-to message)
+      (:msg-str message)
+      (:timestamp message))
+    {:status :success}))
+
+(defn init-mq [conn mq-name handler-fn]
+  (car-mq/worker conn mq-name
+    {:handler handler-fn
+     :throttle-ms 150
+     :eoq-backoff-ms 100}))
+
+(defrecord Redis [options db]
   component/Lifecycle
   
   (start [component]
     (let [host (:host options)
           port (:port options)
-          conn {:pool {} :spec {:host host :port port}}]
+          conn {:pool {} :spec {:host host :port port}}
+          handler-fn (mq-handler (:db component))]
       (assoc component
              :redis-conn conn
-             :listener (init-listener conn))))
+             :listener (init-listener conn)
+             :mq-worker (init-mq conn "chat-persist-mq" handler-fn))))
   
   (stop [component]
-    (assoc component
-           :redis-conn nil
-           :listener nil)))
+    (do
+      (car-mq/stop (:mq-worker component))
+      (assoc component
+        :redis-conn nil
+        :listener nil
+        :db nil
+        :mq-worker nil))))
 
 (defn new-redis-server [options]
   (log/debug "options: " options)
@@ -71,6 +96,10 @@
   (let [conn (:redis-conn redis)
         channel (str "thread@" tid)]
     (car/wcar conn (car/publish channel msg))))
+
+(defn enqueue-msg [redis msg]
+  (let [conn (:redis-conn redis)]
+    (car/wcar conn (car-mq/enqueue "chat-persist-mq" msg))))
 
 (defn cache-user-info [redis uid tids handle-redis]
   (let [conn (:redis-conn redis)

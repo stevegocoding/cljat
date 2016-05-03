@@ -29,7 +29,8 @@
                                 (r/sub-thread redis thread-id listener)))
     (= id :cljat/chat-msg) (do
                              (log/debug "msg route: " "chat msg received!" " data: " msg-data)
-                             (r/pub-msg redis (:sent-to msg-data) msg-body))
+                             (r/pub-msg redis (:sent-to msg-data) msg-body)
+                             (r/enqueue-msg redis msg-data))
     
     (= id :cljat/add-friend) (do
                                (log/debug "msg route: " "add friend received!" " data: " msg-data)

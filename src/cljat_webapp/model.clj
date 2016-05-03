@@ -82,7 +82,13 @@
                                (let [tid (:tid x)
                                      tv (get col tid)]
                                  (if tv
-                                   (do (when (< (count tv) 2)
+                                   (do (when (< (count tv) 15)
                                          (update-in col [tid] conj x)))
                                    (assoc col tid [x])))) {} rs)
                      )))
+
+(defn insert-message [db sender-id dest-id content ts]
+  (sql/insert! (:conn db) :messages {:sender_id sender-id
+                                     :dest_id dest-id
+                                     :content content
+                                     :timestamp (tc/to-sql-time ts)}))
