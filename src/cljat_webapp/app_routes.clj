@@ -145,6 +145,13 @@
       (status 200)
       (content-type "application/json; charset=utf-8"))))
 
+(defn find-recent-messages [db user-id]
+  (let [result (m/find-newest-messages db user-id)]
+    (->
+      (response {:data result})
+      (status 200)
+      (content-type "application/json; charset=utf-8"))))
+
 (defn not-found-route [req]
   (not-found "cljat 404"))
 
@@ -167,7 +174,9 @@
         (POST "/add-thread" req (fn [req]
                                    (add-thread db
                                      (get-in req [:params :user-id])
-                                     (get-in req [:params :friend-id])))))
+                                     (get-in req [:params :friend-id]))))
+        (GET "/recent-msgs" req (fn [req]
+                                  (find-recent-messages db (get-in req [:params :user-id])))))
       (wrap-stacktrace)
       ;;(wrap-resource "public")
       (wrap-authentication)

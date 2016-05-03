@@ -151,7 +151,7 @@
        [thread-avatar thread]
        [:div {:class "thread-item-body media-body"}
         [:div {:class "list-group-item-heading"} thread-title]
-        [:small {:class "list-group-item-text c-gray"} (->
+        [:small {:class "latest-msg list-group-item-text c-gray"} (->
                                                          (@threads-msg-inbox (:tid thread))
                                                          (last)
                                                          :msg-str)]]])))
@@ -358,6 +358,23 @@
                                                    [new-msg-data]
                                                    (conj v new-msg-data))))) sent-to msg-data)))
 
+(defn load-messages-history [msgs]
+  (js/console.log "msg history data: " msgs)
+  (doseq [[tid msgs] (seq msgs)
+          msg (reverse msgs)]
+    (js/console.log "msg history tid: " (name tid))
+    (let [msg-data {:msg-id :cljat/chat-msg :uid (:sender msg)
+                    :sent-to (:tid msg)
+                    :sent-from (:sender msg)
+                    :msg-str (:content msg)
+                    :timestamp (:ts msg)}]
+      (js/console.log "msg history: " (:content msg))
+      (swap! threads-msg-inbox (fn [cur tid new-msg-data]
+                                 (update cur tid (fn [v]
+                                                   (if-not v
+                                                     [new-msg-data]
+                                                     (conj v new-msg-data))))) (js/parseInt (name tid)) msg-data))))
+
 (defn add-system-message [msg-data]
   (swap! threads-msg-inbox (fn [cur tid new-msg-data]
                              (update cur tid (fn [v]
@@ -415,6 +432,16 @@
                                      (if-not (empty? threads-resp)
                                        (reset! sidebar-tab-stats
                                          (assoc-in @sidebar-tab-stats [:threads :cur] (-> threads-resp (get 0) :tid))))))
+
+                                 (js/console.log "ajax -- fetch recent msg list") 
+                                 (let [resp (<! (ajax-chan GET "/app/recent-msgs" {:user-id (.-uid js/cljat)}))]
+                                   (let [msg-resp (->
+                                                    (js->clj resp)
+                                                    (walk/keywordize-keys)
+                                                    (get-in [:data]))]
+                                     (js/console.log "ajax -- finished fetch recent msg list" msg-resp)
+                                     ;; add messages to threads-msg-inbox atom
+                                     (load-messages-history msg-resp)))
 
                                  ;; Wait for sente websocket is ready
                                  (<! ch-ready)

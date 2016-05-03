@@ -65,3 +65,24 @@
 (defn find-thread-id-by-title [conn title]
   (sql/query conn ["select thread_id from threads where title = ?" title]))
 
+(defn find-newest-messages [db uid]
+  "Example:select ut.thread_id, m.content, m.timestamp from users_threads ut 
+           inner join messages m on m.dest_id = ut.thread_id
+           inner join ( select dest_id from messages
+           group by dest_id) as tm on tm.dest_id = ut.thread_id
+           and ut.user_id = 1;"
+  (sql/query (:conn db) [(str "select ut.thread_id tid, m.msg_id mid, m.sender_id sender, m.content content, m.timestamp ts from users_threads ut "
+                   "inner join messages m on m.dest_id = ut.thread_id "
+                   "inner join (select dest_id from messages group by dest_id) as tm on tm.dest_id = ut.thread_id "
+                   "where ut.user_id = ? "
+                   "order by ts desc ") uid]
+    :row-fn (fn [row] (update-in row [:ts] (fn [ts] (-> ts tc/from-sql-time tc/to-long))))
+    :result-set-fn (fn [rs]
+                     (reduce (fn [col x]
+                               (let [tid (:tid x)
+                                     tv (get col tid)]
+                                 (if tv
+                                   (do (when (< (count tv) 2)
+                                         (update-in col [tid] conj x)))
+                                   (assoc col tid [x])))) {} rs)
+                     )))

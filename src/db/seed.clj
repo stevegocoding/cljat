@@ -33,11 +33,16 @@
   {:title title
    :created_time (tc/to-sql-time (t/now))})
 
+(def msg-count (atom 0))
 (defn new-message [from to content]
-  {:sender_id from
-   :dest_id to
-   :content content
-   :timestamp (tc/to-sql-time (t/now))})
+  (do
+    (swap! msg-count inc)
+    {:sender_id from
+     :dest_id to
+     :content content
+     :timestamp (tc/to-sql-time (->
+                                  (t/now)
+                                  (t/plus (t/seconds (* 10 @msg-count)))))}))
 
 (defn find-user-id-by-nickname [conn nickname]
   (sql/query conn ["select user_id from users where nickname = ?" nickname]
@@ -110,8 +115,14 @@
         uid-2 (:user_id (find-user-id-by-nickname conn "steve"))
         uid-3 (:user_id (find-user-id-by-nickname conn "coco"))]
     (sql/insert! conn :messages (new-message uid-1 tid-3 "from funny - hi baba mama"))
-    (sql/insert! conn :messages (new-message uid-2 tid-2 "from steve - hi funny, this is baba"))
-    (sql/insert! conn :messages (new-message uid-3 tid-1 "from coco - hi funny, this is coco"))))
+    (sql/insert! conn :messages (new-message uid-2 tid-3 "from steve - hi funny, this is baba"))
+    (sql/insert! conn :messages (new-message uid-2 tid-2 "from steve - hi funny, this is steve baba"))
+    (sql/insert! conn :messages (new-message uid-1 tid-2 "from funny - baba, I want to go out play!"))
+    (sql/insert! conn :messages (new-message uid-3 tid-1 "from coco - hi funny, this is coco"))
+    (sql/insert! conn :messages (new-message uid-1 tid-1 "from funny - hi coco, this is funny"))
+    (sql/insert! conn :messages (new-message uid-3 tid-1 "from coco - how are you funny"))
+    (sql/insert! conn :messages (new-message uid-1 tid-1 "from funny - I'm good! thanks!"))
+    (sql/insert! conn :messages (new-message uid-3 tid-1 "from coco - Great, let's go out and play!"))))
 
 (defn seed-all []
   (do
