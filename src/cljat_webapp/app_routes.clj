@@ -57,6 +57,20 @@
       (response)
       (content-type "text/html; charset=utf-8"))))
 
+(defn signup-page [req]
+  (let [params (template-params req {:title "cljat signup"})]
+    (->
+      (parser/render-file "signup.html" params)
+      (response)
+      (content-type "text/html; charset=utf-8"))))
+
+(defn do-signup [{:keys [nickname email password] :as params} db]
+  (log/debug "nickname: " nickname "email: " email " password: " password)
+  (->
+    (response {:message "ok" :data {:redirect "/login"}})
+    (status 200)
+    (content-type "application/json; charset=utf-8")))
+
 #_(defn do-login [{:keys [email password] :as params} db privkey]
   (let [row (check-user-creds db email password)]
     (log/debug params)
@@ -206,20 +220,12 @@
     (->
       (routes
         (GET "/" [] home-route)
-        (GET "/login" req (fn [req]
-                            (do 
-                              (log/debug "login --- " req)
-                              (login-page req))))
-        (POST "/login" req (fn [req]
-                             (log/debug "--- " req)
-                             #_(-> (response "Hello World")
-                                 (content-type "text/plain"))
-                             #_(do-login (:params req) db privkey)
-                             (do-login-session (:params req) db)))
-        (POST "/login-form" req (fn [req]
-                                  (do
-                                    (log/debug "login-form -- " req)
-                                    (redirect "app/chat")))))
+        (GET "/login" req (login-page req))
+        (GET "/signup" req (signup-page req))
+        (POST "/signup2" req (do-signup (:params req) db))
+        (POST "/signup-form" req (redirect "login"))
+        (POST "/login" req (do-login-session (:params req) db))
+        (POST "/login-form" req (redirect "app/chat")))
       (wrap-routes wrap-site))))
 
 (defn new-app-routes [endpoint]

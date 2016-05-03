@@ -37,9 +37,34 @@
                                        :password password}
                               :handler (fn [resp]
                                          (js/console.log "login ok!")
-                                         (go (<! (timeout 1000))
+                                         (go (<! (timeout 500))
                                              (.submit form)))
                               :error-handler handler
                               :format :json
                               :response-format :json
                               :keywords? true})))))))
+
+(when-let [el (dom/getElement "signup-form")]
+  (let [signup-ch (listen el goog.events.EventType.SUBMIT)]
+    (go (while true
+          (let [e (<! signup-ch)
+                signup-btn (dom/getElement "signup-btn")]
+            (set! (.-innerHTML signup-btn) "Processing ...")
+            (set! (.-disabled signup-btn) true)
+            (let [form (dom/getElement "signup-form")
+                  nickname (.-value (dom/getElement "nickname-input"))
+                  email (.-value (dom/getElement "email-input"))
+                  password (.-value (dom/getElement "password-input"))]
+              (<! (timeout 500))
+              (POST "/signup2" {:params {:nickname nickname
+                                        :email email
+                                        :password password}
+                               :handler (fn [resp]
+                                          (js/console.log "signup ok!")
+                                          (set! (.-innerHTML signup-btn) "Success!")
+                                          (go (<! (timeout 900))
+                                              (.submit form)))
+                               :error-handler handler
+                               :format :json
+                               :response-format :json
+                               :keywords? true})))))))

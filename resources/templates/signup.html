@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8"/>
+    <title>{{ title }}</title>
+  </head>
+  <body>
+      {% style "/bootstrap/css/bootstrap.min.css" %}
+      {% style "/font-awesome/css/font-awesome.min.css" %}
+      {% style "/css/signup.css" %}
+      
+      <div class="container signup">
+        <h2>Sign up</h2>
+        <form id="signup-form" class="form-horizontal" action="/signup-form" method="POST">
+          <fieldset>
+            <div class="control-group">
+              <label class="control-label" for="nickname">Nickname</label>
+              <div class="controls">
+                <input type="text" id="nickname-input" name="nickname" placeholder="" class="form-control input-lg">
+                <p id="nickname-input-help" class="help-block">Username can contain any letters or numbers, without spaces</p>
+              </div>
+            </div>
+            
+            <div class="control-group">
+              <label class="control-label" for="email">E-mail</label>
+              <div class="controls">
+                <input type="email" id="email-input" name="email" placeholder="" class="form-control input-lg">
+                <p id="email-input-help" class="help-block">Please provide your E-mail</p>
+              </div>
+            </div>
+            
+            <div class="control-group">
+              <label class="control-label" for="password">Password</label>
+              <div class="controls">
+                <input type="password" id="password-input" name="password" placeholder="" class="form-control input-lg">
+                <p id="password-input-help" class="help-block">Password should be at least 6 characters</p>
+              </div>
+            </div>
+            
+            <div class="control-group">
+              <!-- Button -->
+              <div class="controls">
+                <button type="submit" id="signup-btn" class="btn btn-success">Register</button>
+              </div>
+            </div>
+          </fieldset>
+        </form>
+      </div>
+
+      {% script "/js/cljat_webapp/app.js" %}
+  </body>
+</html>
