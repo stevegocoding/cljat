@@ -320,17 +320,14 @@
 (defn chat-input [ch-out]
   (let [input-value (r/atom "")]
     (fn []
-      (let [on-change (fn [e]
-                        (reset! input-value (.-value (.-target e))))
-            on-key-press (fn [e]
-                           (when (and
-                                   (= 13 (.-charCode e))
-                                   (seq @input-value))
-                             (put! ch-out [:cljat/chat-msg {:data {:sent-from (.-uid js/cljat)
-                                                                   :sent-to (get-in @sidebar-tab-stats [:threads :cur])
-                                                                   :msg-str @input-value}}])
-                             (js/console.log "message sent")
-                             (reset! input-value "")))]
+      (let [send-fn (fn []
+                      (put! ch-out [:cljat/chat-msg {:data {:sent-from (.-uid js/cljat)
+                                                            :sent-to (get-in @sidebar-tab-stats [:threads :cur])
+                                                            :msg-str @input-value}}])
+                      (reset! input-value ""))
+            
+            on-change (fn [e]
+                        (reset! input-value (.-value (.-target e))))]
         [:div {:id "chat-input" :class "input-box"}
          [:input {:id "msg-input"
                   :value @input-value
@@ -338,8 +335,12 @@
                   :size 50
                   :placeholder "Write Message ..."
                   :on-change on-change
-                  :on-key-press on-key-press}]
-         [:span [:input {:id "send-btn" :type "submit" :value "send"}]]]))))
+                  :on-key-press (fn [e]
+                                  (when (and
+                                          (= 13 (.-charCode e))
+                                          (seq @input-value))
+                                    (send-fn)))}]
+         [:span [:input {:id "send-btn" :type "submit" :value "send" :on-click #(send-fn)}]]]))))
 
 (defn chat [ch-out]
   (fn []
