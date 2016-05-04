@@ -31,7 +31,7 @@
 (defn mq-handler [db]
   (fn [{:keys [message attempt]}]
     (log/info "MQ Received" message)
-    (m/insert-message db
+    (m/insert-message! db
       (:sent-from message)
       (:sent-to message)
       (:msg-str message)

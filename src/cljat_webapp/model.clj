@@ -1,7 +1,9 @@
 (ns cljat-webapp.model
   (:require [clojure.java.jdbc :as sql]
             [clj-time.core :as t]
-            [clj-time.coerce :as tc]))
+            [clj-time.coerce :as tc]
+            [buddy.hashers :as hashers]
+            [buddy.core.nonce :as nonce]))
 
 (defn find-user-by-email [db email]
   (sql/query (:conn db)
@@ -12,6 +14,14 @@
   (sql/query (:conn db)
     ["select u.user_id as uid, u.email, u.nickname from users u where u.user_id = ?" id]
     :result-set-fn first))
+
+(defn password-hash [password]
+  (hashers/derive password {:alg :bcrypt+blake2b-512 :salt (nonce/random-bytes 16)}))
+
+(defn insert-new-user! [db nickname email password]
+  (sql/insert! (:conn db) :users {:nickname nickname
+                                  :email email                                  
+                                  :password (password-hash password)}))
 
 (defn find-friends-by-user-id [db user-id]
   (sql/query (:conn db)
@@ -87,7 +97,7 @@
                                    (assoc col tid [x])))) {} rs)
                      )))
 
-(defn insert-message [db sender-id dest-id content ts]
+(defn insert-message! [db sender-id dest-id content ts]
   (sql/insert! (:conn db) :messages {:sender_id sender-id
                                      :dest_id dest-id
                                      :content content

@@ -66,10 +66,22 @@
 
 (defn do-signup [{:keys [nickname email password] :as params} db]
   (log/debug "nickname: " nickname "email: " email " password: " password)
-  (->
-    (response {:message "ok" :data {:redirect "/login"}})
-    (status 200)
-    (content-type "application/json; charset=utf-8")))
+  (let [row (m/find-user-by-email db email)]
+    (if (nil? row)
+      (do
+        (m/insert-new-user! db nickname email password)
+        (->
+          (response {:status 200
+                     :message "ok"
+                     :data {:redirect "/login"}})
+          (status 200)
+          (content-type "application/json; charset=utf-8")))
+      (->
+        (response {:status 400
+                   :input "email"
+                   :message "Email has been registered! Try another one."})
+        (status 200)
+        (content-type "application/json; charset=utf-8")))))
 
 #_(defn do-login [{:keys [email password] :as params} db privkey]
   (let [row (check-user-creds db email password)]
