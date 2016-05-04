@@ -111,5 +111,10 @@ body, input, button {
   /*
   -webkit-transform: translateY(-3px);
   transform: translateY(-3px);
-*/
+ */
+                            }
+
+.login-help {
+    text-align: center;
+    margin-top: 10px;
 }

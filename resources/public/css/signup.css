@@ -39,3 +39,7 @@ body {
 .signup .help-block {
     display: none; 
 }
+
+.signup p {
+    margin-top: 10px;
+}

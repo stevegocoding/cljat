@@ -12,46 +12,39 @@
       <div class="header clearfix">
         <nav>
           <ul class="nav nav-pills pull-right">
-            <li role="presentation" class="active"><a href="#">Home</a></li>
-            <li role="presentation"><a href="#">About</a></li>
-            <li role="presentation"><a href="#">Contact</a></li>
+              <li role="presentation"><a href="/signup">Signup</a></li>
+              <li role="presentation"><a href="/login">Login</a></li>
           </ul>
         </nav>
-        <h3 class="text-muted">Project name</h3>
+        <h3 class="text-muted">CLJAT - A chat app in Clojure</h3>
       </div>
 
       <div class="jumbotron">
-        <h1>Jumbotron heading</h1>
-        <p class="lead">Cras justo odio, dapibus ac facilisis in, egestas eget quam. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus.</p>
-        <p><a class="btn btn-lg btn-success" href="#" role="button">Sign up today</a></p>
+        <h1>CLJAT</h1>
+        <p class="lead">Welcome to CLJAT, a simple websocket chat app demo with Clojure/Clojurescript, Reagent, Redis and Postgresql.</p>
+        <p><a class="btn btn-lg btn-success" href="https://github.com/stevegocoding/cljat-webapp" role="button">GitHub</a></p>
       </div>
 
-      <div class="row marketing">
+      <div class="row">
         <div class="col-lg-6">
-          <h4>Subheading</h4>
-          <p>Donec id elit non mi porta gravida at eget metus. Maecenas faucibus mollis interdum.</p>
+          <h4>Front End</h4>
+          <p>The front end is powered by vanila <b>Clojurescript</b> and <a href="http://reagent-project.github.io/">Reagent</a> - a nice Clojurescript wrapper of the blazing fast <b>React.js</b>. Combined with Clojurescript's powerful core.async library, DOM events handling and websocket communication become so much fun!</p>
 
-          <h4>Subheading</h4>
-          <p>Morbi leo risus, porta ac consectetur ac, vestibulum at eros. Cras mattis consectetur purus sit amet fermentum.</p>
-
-          <h4>Subheading</h4>
-          <p>Maecenas sed diam eget risus varius blandit sit amet non magna.</p>
+          <h4>Web Server</h4>
+          <p>HTTP server is <a href="http://www.http-kit.org/">HttpKit</a> - a NIO Java server that is capable of handling massive concurrent connection. Web server handles the incoming websocket messages and put it onto an outgoing core.async channel, the other side of this channel is message router.</p>
         </div>
 
         <div class="col-lg-6">
-          <h4>Subheading</h4>
-          <p>Donec id elit non mi porta gravida at eget metus. Maecenas faucibus mollis interdum.</p>
-
-          <h4>Subheading</h4>
-          <p>Morbi leo risus, porta ac consectetur ac, vestibulum at eros. Cras mattis consectetur purus sit amet fermentum.</p>
-
-          <h4>Subheading</h4>
-          <p>Maecenas sed diam eget risus varius blandit sit amet non magna.</p>
+            <h4>Message routing and Scaling with <b>Redis</b></h4>
+            <p>In a web server cluster setup, users chatting on the same thread may connect to different web nodes. We make these nodes all SUB the same thread with Redis, when message router grabs the message from the incoming channel, it PUBs it on the message's thread so that the message will be dispatched to all the web server nodes which sub that thread. </p>
+            
+            <h4>Persistent</h4>
+            <p>In addition of the usage of Redis's PUB/SUB for message routing, a named MQ is also used to send the chat messages to a database persistent worker. Currently only RDBMS is used.</p>
         </div>
       </div>
 
       <footer class="footer">
-        <p>&copy; 2015 Company, Inc.</p>
+        <p>Guangfu Shi's Project - 2016</p>
       </footer>
 
     </div> <!-- /container -->

@@ -21,7 +21,8 @@
 (defn insert-new-user! [db nickname email password]
   (sql/insert! (:conn db) :users {:nickname nickname
                                   :email email                                  
-                                  :password (password-hash password)}))
+                                  :password (password-hash password)
+                                  :register_time (tc/to-sql-time (t/now))}))
 
 (defn find-friends-by-user-id [db user-id]
   (sql/query (:conn db)
