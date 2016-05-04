@@ -18,7 +18,8 @@
 (defn new-user [email nickname pass]
   {:email email
    :nickname nickname
-   :password (password-hash pass)})
+   :password (password-hash pass)
+   :register_time (tc/to-sql-time (t/now))})
 
 (defn new-friendship-mutual [conn nickname-a nickname-b]
   (let [rs (sql/query conn ["select user_id, nickname from users where nickname in (?, ?)" nickname-a nickname-b])

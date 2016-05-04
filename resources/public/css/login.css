@@ -79,7 +79,7 @@ body, input, button {
   border: none;
 }
 .login form button {
-  margin-top: 20px;
+  margin-top: 10px;
   background: #27AE60;
   border: none;
   font-size: 1.6em;
@@ -113,6 +113,12 @@ body, input, button {
   transform: translateY(-3px);
  */
                             }
+
+.login form #login-resp-text {
+    padding-top: 5px;
+    padding-bottom: 5px;
+    margin-bottom: 0;
+}
 
 .login-help {
     text-align: center;

@@ -17,12 +17,6 @@
                 (put! out e))))
     out))
 
-(defn handler [response]
-  (.log js/console "server responded..."))
-
-(defn error-handler [{:keys [status status-text]}]
-  (.log js/console (str "something bad happened: " status " " status-text)))
-
 (defn validate-email [email]
   (let [pattern #"[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?"]
     (re-matches pattern email)))
@@ -30,24 +24,31 @@
 (when-let [el (dom/getElement "login-form")]
   (let [login-ch (listen el goog.events.EventType.SUBMIT)]
     (go (while true
-          (let [e (<! login-ch)
-                login-btn (dom/getElement "login-btn")]
-            (.preventDefault e)
+          (<! login-ch)
+          (let [login-btn (dom/getElement "login-btn")
+                form (dom/getElement "login-form")
+                login-resp-text (dom/getElement "login-resp-text")
+                email (.-value (dom/getElement "email-input"))
+                password (.-value (dom/getElement "password-input"))
+                login-btn-text (.-innerHTML login-btn)]
             (set! (.-innerHTML login-btn) "Logging in ...")
             (set! (.-disabled login-btn) true)
-            (let [form (dom/getElement "login-form")
-                  email (.-value (dom/getElement "email-input"))
-                  password (.-value (dom/getElement "password-input"))]
-              (POST "/login" {:params {:email email
-                                       :password password}
-                              :handler (fn [resp]
-                                         (js/console.log "login ok!")
-                                         (go (<! (timeout 500))
-                                             (.submit form)))
-                              :error-handler handler
-                              :format :json
-                              :response-format :json
-                              :keywords? true})))))))
+            (POST "/login" {:params {:email email
+                                     :password password}
+                            :handler (fn [resp]
+                                       (js/console.log "login ok!")
+                                       (style/setStyle login-resp-text "display" "none")
+                                       (go (<! (timeout 500))
+                                           (.submit form)))
+                            :error-handler (fn [{:keys [status status-text]}]
+                                             (when (= status 401)
+                                               (set! (.-innerHTML login-btn) login-btn-text)
+                                               (set! (.-disabled login-btn) false)
+                                               (set! (.-innerHTML login-resp-text) "Incorrect email or password!")
+                                               (style/setStyle login-resp-text "display" "block")))
+                            :format :json
+                            :response-format :json
+                            :keywords? true}))))))
 
 (when-let [el (dom/getElement "signup-form")]
   (let [signup-ch (listen el goog.events.EventType.SUBMIT)]
@@ -107,7 +108,8 @@
                                                                                      (set! (.-innerHTML email-input-help) (:message resp))
                                                                                      (style/setStyle email-input-help "display" "block"))
                                                          :else nil))))
-                                        :error-handler handler
+                                        :error-handler (fn [{:keys [status status-text]}]
+                                                         (.log js/console (str "something bad happened: " status " " status-text)))
                                         :format :json
                                         :response-format :json
                                         :keywords? true}))))))))
